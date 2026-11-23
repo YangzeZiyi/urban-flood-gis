@@ -141,10 +141,33 @@ onMounted(async () => {
     },
   })
 
+  // ---------------- 从后端加载行政边界 ----------------
+  // GeoJsonDataSource.load 的第二个参数不只是 clampToGround，
+  // 它同时支持 stroke（描边色）、fill（填充色）、strokeWidth（线宽）等样式，
+  // 一次给全，比加载完再遍历 entity 改属性省事得多。
+  //
+  // ?level=district 只取 13 个区县。不传会连市级轮廓一起返回，
+  // 市级轮廓和区县拼起来的外沿完全重合，会画出双重描边，反而难看。
+  const admin = await Cesium.GeoJsonDataSource.load('/api/admin?level=district', {
+    clampToGround: true,
+    // 只描边不填充：边界是"参考底图"，不能挡住下面的易涝区
+    fill: Cesium.Color.TRANSPARENT,
+    stroke: Cesium.Color.fromCssColorString('#7fd4ff').withAlpha(0.9),
+    strokeWidth: 1.5,
+  })
+  // 注意添加顺序：先加边界，后加易涝区。
+  // 对于贴地图元（clampToGround），后加的绘制在上层，
+  // 所以易涝区会盖在边界线之上，不会被边线切碎。
+  viewer.dataSources.add(admin)
+
   // ---------------- 从后端加载易涝区 ----------------
   const zones = await Cesium.GeoJsonDataSource.load('/api/zones', { clampToGround: true })
   viewer.dataSources.add(zones)
-  await viewer.flyTo(zones, { duration: 1.5 })
+
+  // 相机飞到哪里？飞"行政边界"而不是"易涝区"：
+  // 飞到单个易涝区只有 2 公里范围，看不到区界全貌；
+  // 飞到全市范围，才能同时看到 13 个区的轮廓和其中那块红色易涝区。
+  await viewer.flyTo(admin, { duration: 1.5 })
 
   // 风险等级 → 颜色：1低 2中 3高 4极高
   const COLORS = { 1: '#2f81f7', 2: '#d29922', 3: '#f0883e', 4: '#f85149' }

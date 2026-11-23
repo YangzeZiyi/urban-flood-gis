@@ -18,6 +18,21 @@ SELECT
 FROM flood_zone;
 
 -- ------------------------------------------------------------
+-- 视图：行政边界（直接输出 GeoJSON，供后端接口调用）
+-- ------------------------------------------------------------
+-- 和 v_flood_zone_geojson 是同一个套路：
+--   ST_AsGeoJSON(geom) 把 PostGIS 的二进制几何转成 GeoJSON 文本
+--   ::json              再把它转成 PostgreSQL 的 json 类型
+-- 这样后端 SELECT 出来就是一个字符串，不用处理 WKB 二进制。
+CREATE OR REPLACE VIEW v_admin_boundary_geojson AS
+SELECT
+    id,
+    name,
+    level,
+    ST_AsGeoJSON(geom)::json AS geometry
+FROM admin_boundary;
+
+-- ------------------------------------------------------------
 -- 视图：各风险等级统计
 -- ------------------------------------------------------------
 CREATE OR REPLACE VIEW v_risk_summary AS
