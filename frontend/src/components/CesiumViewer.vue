@@ -142,32 +142,91 @@ onMounted(async () => {
   })
 
   // ---------------- 从后端加载行政边界 ----------------
-  // GeoJsonDataSource.load 的第二个参数不只是 clampToGround，
-  // 它同时支持 stroke（描边色）、fill（填充色）、strokeWidth（线宽）等样式，
-  // 一次给全，比加载完再遍历 entity 改属性省事得多。
+  // ⚠️ 这里有个 Cesium 的硬限制（我们实际踩过）：
+  //    贴地的多边形（clampToGround: true）**不支持 outline 描边**。
+  //    Cesium 源码里创建描边的那行是 `if (!onTerrain && ...)`，
+  //    只要多边形贴地，描边分支直接被跳过。
+  //    所以「fill 设透明 + stroke 上色」的结果是：屏幕上什么都不出现。
+  //
+  //    正确做法：把每个多边形的每一圈边界取出来，画成「贴地折线」。
+  //    折线走 GroundPolylinePrimitive，既贴地，又能用像素控制线宽。
   //
   // ?level=district 只取 13 个区县。不传会连市级轮廓一起返回，
-  // 市级轮廓和区县拼起来的外沿完全重合，会画出双重描边，反而难看。
-  const admin = await Cesium.GeoJsonDataSource.load('/api/admin?level=district', {
-    clampToGround: true,
-    // 只描边不填充：边界是"参考底图"，不能挡住下面的易涝区
-    fill: Cesium.Color.TRANSPARENT,
-    stroke: Cesium.Color.fromCssColorString('#7fd4ff').withAlpha(0.9),
-    strokeWidth: 1.5,
-  })
-  // 注意添加顺序：先加边界，后加易涝区。
-  // 对于贴地图元（clampToGround），后加的绘制在上层，
-  // 所以易涝区会盖在边界线之上，不会被边线切碎。
-  viewer.dataSources.add(admin)
+  // 市级轮廓和区县外沿完全重合，会画出双重线，反而难看。
+  const resp = await fetch('/api/admin?level=district')
+  if (!resp.ok) throw new Error(`边界接口返回 HTTP ${resp.status}`)
+  const adminGeoJson = await resp.json()
+
+  const lineColor = Cesium.Color.fromCssColorString('#7fd4ff').withAlpha(0.95)
+  const instances = []
+  // 顺便算出整体经纬度范围，等下用它精确框住相机
+  let west = 180
+  let south = 90
+  let east = -180
+  let north = -90
+
+  for (const feature of adminGeoJson.features) {
+    const g = feature.geometry
+    if (!g) continue
+    // Polygon 和 MultiPolygon 统一成「多边形数组」，省得分两套逻辑
+    const polygons = g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates]
+
+    for (const polygon of polygons) {
+      // 一个多边形可能有多个环：第 1 圈是外轮廓，后面的是「洞」（飞地、湖泊）
+      for (const ring of polygon) {
+        // ring 是 [[lon, lat], ...]，Cesium 要扁平的 [lon, lat, lon, lat, ...]
+        const flat = []
+        for (const [lon, lat] of ring) {
+          flat.push(lon, lat)
+          if (lon < west) west = lon
+          if (lon > east) east = lon
+          if (lat < south) south = lat
+          if (lat > north) north = lat
+        }
+        instances.push(
+          new Cesium.GeometryInstance({
+            geometry: new Cesium.GroundPolylineGeometry({
+              positions: Cesium.Cartesian3.fromDegreesArray(flat),
+              width: 2, // 屏幕像素宽，缩放时线不会变粗变细
+            }),
+            attributes: {
+              color: Cesium.ColorGeometryInstanceAttribute.fromColor(lineColor),
+            },
+          }),
+        )
+      }
+    }
+  }
+
+  // 所有线合成一个 primitive 一次性提交 GPU。
+  // 20 多条线如果各建一个 primitive，绘制调用会翻倍，这里只花 1 次。
+  //
+  // translucent: true 不能省：我们的线色 alpha 是 0.95（半透明），
+  // 不开这个开关，Cesium 会按"不透明"渲染，混合结果可能发黑。
+  viewer.scene.primitives.add(
+    new Cesium.GroundPolylinePrimitive({
+      geometryInstances: instances,
+      appearance: new Cesium.PolylineColorAppearance({ translucent: true }),
+    }),
+  )
+  console.log(
+    `[边界] 已绘制 ${instances.length} 条边界线，覆盖 ${adminGeoJson.features.length} 个区县`,
+  )
 
   // ---------------- 从后端加载易涝区 ----------------
   const zones = await Cesium.GeoJsonDataSource.load('/api/zones', { clampToGround: true })
   viewer.dataSources.add(zones)
+  console.log(`[易涝区] 已加载 ${zones.entities.values.length} 条`)
 
-  // 相机飞到哪里？飞"行政边界"而不是"易涝区"：
-  // 飞到单个易涝区只有 2 公里范围，看不到区界全貌；
-  // 飞到全市范围，才能同时看到 13 个区的轮廓和其中那块红色易涝区。
-  await viewer.flyTo(admin, { duration: 1.5 })
+  // ---------------- 相机飞到全市范围 ----------------
+  // 不用 flyTo(数据源)：它按包围球算距离、还带俯角，实际会飞得偏远
+  // （你上一张截图视野宽到了荆门、黄石，就是这个原因）。
+  // 用 Rectangle 最准：相机自动调高度，让这个矩形刚好铺满视野。
+  const PAD = 0.05 // 四周各留 5% 余量，免得区界贴着屏幕边
+  await viewer.camera.flyTo({
+    destination: Cesium.Rectangle.fromDegrees(west - PAD, south - PAD, east + PAD, north + PAD),
+    duration: 1.5,
+  })
 
   // 风险等级 → 颜色：1低 2中 3高 4极高
   const COLORS = { 1: '#2f81f7', 2: '#d29922', 3: '#f0883e', 4: '#f85149' }
