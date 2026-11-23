@@ -1,0 +1,57 @@
+# ===== 数据与产物（体积大，不进版本库）=====
+data/raw/
+data/clean/
+data/output/
+*.tif
+*.tiff
+*.shp
+*.shx
+*.dbf
+*.prj
+*.zip
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+
+# ===== Java / Maven =====
+backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# ===== Node =====
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/public/cesium/
+npm-debug.log*
+yarn-error.log*
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ===== 系统 =====
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ===== 敏感信息 =====
+application-local.properties
+*.key
+*.pem
+
+# ===== 含密码的配置（只推 .example 模板，真实配置留本地）=====
+backend/src/main/resources/application.yml
+
+# ===== 个人简历（含电话/邮箱等隐私，不放公开仓库）=====
+docs/*简历*.docx

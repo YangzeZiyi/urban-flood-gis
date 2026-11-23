@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>城市内涝风险可视化平台</title>
+
+    <!--
+      CESIUM_BASE_URL —— 必须写在所有 import 之前
+      ---------------------------------------------------------------------
+      Cesium 运行时要知道去哪儿加载静态资源（贴图、Worker、控件样式）。
+      它默认按"根路径"找，但我们的资源在 /cesium/ 下，所以先告诉它。
+      这行是普通 script，不是 module，所以会最先执行；如果写成 ESM import，
+      就会因为提升（hoisting）先于赋值执行，导致路径还是旧的。
+    -->
+    <script>
+      window.CESIUM_BASE_URL = '/cesium/'
+    </script>
+
+    <!-- Cesium 控件（缩放按钮、时间轴、版权信息）的样式，来自 public/cesium/Widgets/ -->
+    <link rel="stylesheet" href="/cesium/Widgets/widgets.css" />
+  </head>
+  <body>
+    <!-- Vue 应用的全部内容会挂载到这个 div 里 -->
+    <div id="app"></div>
+
+    <!-- 入口脚本：/src/main.js 由 Vite 处理，浏览器不会直接请求 .vue 文件 -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

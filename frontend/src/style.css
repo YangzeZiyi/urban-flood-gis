@@ -1,0 +1,41 @@
+/**
+ * 全局样式
+ * 只做三件事：清掉浏览器默认边距、撑满全屏、定一套配色变量。
+ * 组件内部的样式写在各自的 <style scoped> 里，不会互相污染。
+ */
+
+/* :root 里定义的变量可以被任何地方用 var(--名字) 取到 */
+:root {
+  --bg: #0d1117;
+  --panel: rgba(16, 22, 32, 0.82);
+  --border: rgba(120, 170, 255, 0.18);
+  --text: #e6edf3;
+  --text-dim: #8b98a8;
+  --accent: #3fa9f5;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --bad: #f85149;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* 让 width 包含 padding 和 border，算尺寸不头疼 */
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* 地图要撑满，禁止出现滚动条 */
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  /* 关闭长按选中，拖动地图时不会误选中文字 */
+  -webkit-user-select: none;
+  user-select: none;
+}

@@ -1,0 +1,39 @@
+# ============================================================================
+#  城市内涝平台 · 后端配置模板（不含密码）
+#  使用说明：
+#    1. 把本文件复制一份，改名为 application.yml（注意去掉 .example 后缀）
+#    2. 把下面 password 改成你自己本机 PostgreSQL 的密码
+#    3. application.yml 已被 .gitignore 排除，不会推送到公开仓库
+# ============================================================================
+
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    name: floodgis-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/floodgis
+    username: postgres
+    password: "改成你自己的密码"   # ★ 纯数字密码请加双引号（YAML 八进制陷阱）
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 5000
+      pool-name: FloodGisPool
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+logging:
+  level:
+    root: INFO
+    com.floodgis: DEBUG
+    org.springframework.jdbc.core: DEBUG

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>城市内涝风险可视化平台 · 开发方案与从零环境配置</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 14px; line-height: 1.75; color: #2c2c2a;
+    background: #f7f7f5;
+  }
+  .page { max-width: 900px; margin: 0 auto; background: #ffffff; padding: 48px 56px 72px; }
+  h1 { font-size: 26px; font-weight: 600; color: #1a3a5c; margin: 0 0 8px; letter-spacing: 0.5px; }
+  .sub { font-size: 13px; color: #888780; margin: 0 0 6px; }
+  .meta { font-size: 12px; color: #b4b2a9; margin-bottom: 28px; }
+  h2 {
+    font-size: 18px; font-weight: 600; color: #ffffff; background: #1a3a5c;
+    padding: 8px 14px; margin: 40px 0 18px; border-radius: 4px;
+  }
+  h3 { font-size: 15px; font-weight: 600; color: #1a3a5c; margin: 26px 0 10px; padding-left: 10px; border-left: 3px solid #1a3a5c; }
+  h4 { font-size: 13.5px; font-weight: 600; color: #444441; margin: 18px 0 8px; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code {
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+    font-size: 12.5px; background: #f1efe8; color: #993c1d;
+    padding: 1px 5px; border-radius: 3px;
+  }
+  pre {
+    background: #1e1e1e; color: #d4d4d4; padding: 14px 16px; border-radius: 6px;
+    overflow-x: auto; font-size: 12.5px; line-height: 1.6; margin: 10px 0;
+    font-family: "Cascadia Code", "Consolas", monospace;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { background: #eef1f5; color: #1a3a5c; font-weight: 600; text-align: left; padding: 8px 10px; border: 1px solid #dcdcd6; }
+  td { padding: 8px 10px; border: 1px solid #e5e5e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #fbfbf9; }
+  .box {
+    background: #f4f8fb; border-left: 4px solid #378add; padding: 12px 16px;
+    border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 13.5px;
+  }
+  .warn { background: #fdf6ec; border-left-color: #ba7517; }
+  .good { background: #f0f7ee; border-left-color: #3b6d11; }
+  .danger { background: #fdf0f0; border-left-color: #a32d2d; }
+  .box strong { color: #1a3a5c; }
+  .warn strong { color: #854f0b; }
+  .danger strong { color: #a32d2d; }
+  .good strong { color: #3b6d11; }
+  .step {
+    border: 1px solid #e5e5e0; border-radius: 8px; padding: 16px 20px; margin: 16px 0;
+    background: #fcfcfa;
+  }
+  .step-title { font-size: 14.5px; font-weight: 600; color: #1a3a5c; margin: 0 0 4px; }
+  .step-time { font-size: 12px; color: #888780; margin-bottom: 10px; }
+  .tag { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 10px; background: #e6f1fb; color: #185fa5; margin-right: 6px; }
+  .tag.g { background: #eaf3de; color: #3b6d11; }
+  .tag.a { background: #faeeda; color: #854f0b; }
+  .tag.r { background: #fcebeb; color: #a32d2d; }
+  .toc { background: #fafaf7; border: 1px solid #e5e5e0; border-radius: 8px; padding: 16px 24px; margin: 24px 0 32px; }
+  .toc p { font-weight: 600; color: #1a3a5c; margin: 0 0 8px; font-size: 13.5px; }
+  .toc ol { margin: 0; padding-left: 20px; font-size: 13px; color: #444441; }
+  .toc li { margin: 4px 0; }
+  .check { list-style: none; padding-left: 0; }
+  .check li { padding-left: 24px; position: relative; margin: 6px 0; }
+  .check li::before { content: "□"; position: absolute; left: 4px; color: #888780; font-size: 14px; }
+  .divider { height: 1px; background: #e5e5e0; margin: 32px 0; }
+  .foot { font-size: 12px; color: #b4b2a9; margin-top: 48px; text-align: center; }
+  @media print { body { background: #fff; } .page { padding: 0; } h2 { break-after: avoid; } .step { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>城市内涝风险可视化平台</h1>
+<p class="sub">开发方案 · 模块拆解 · 12 周排期 · 从零环境配置</p>
+<p class="meta">为 王巍琳 定制 ｜ 2026 年 11 月 — 2027 年 2 月 ｜ 兼职期间执行</p>
+
+<div class="box good">
+<strong>一句话定位：</strong>把你毕设里"数据采集 → 空间分析 → 预测 → 可视化"的骨架保留，换成 2026 年的技术栈（Vue3 + Cesium + Spring Boot + PostGIS），场景从"PM2.5"升级为"城市内涝风险"。<br><br>
+<strong>为什么是它：</strong>① 你熟悉这套逻辑，上手最快；② Cesium + Vue + PostGIS 正是雄安、深圳 GIS 开发岗 JD 点名要的技术；③ "韧性城市"是政策热点，题目有现实价值，面试能讲半小时；④ 数据全部公开可获取，不需要任何内部资源。
+</div>
+
+<div class="toc">
+<p>目录</p>
+<ol>
+<li>技术栈清单（版本与用途）</li>
+<li>七大模块拆解（做什么 · 产出什么 · 怎么算做完）</li>
+<li>12 周排期表（对齐年后求职节点）</li>
+<li>环境配置教程（Windows 从零，共 8 步）</li>
+<li>一次性验证清单（装完跑一遍）</li>
+<li>项目骨架与第一周动手步骤</li>
+<li>避坑清单（前人踩过的坑）</li>
+<li>年前交付物清单</li>
+</ol>
+</div>
+
+<h2>一、技术栈清单</h2>
+
+<p>所有版本都选当前稳定版，不要追求最新（最新版踩坑多、教程对不上）。</p>
+
+<table>
+<thead><tr><th style="width:20%">类别</th><th style="width:32%">选型</th><th style="width:14%">版本</th><th>用途与说明</th></tr></thead>
+<tbody>
+<tr><td>运行时</td><td>JDK（Temurin / Adoptium）</td><td>21 LTS</td><td>Spring Boot 3 要求 17+，21 是当前长期支持版</td></tr>
+<tr><td>运行时</td><td>Node.js</td><td>26 LTS</td><td>Vue3 + Vite 需要 18+，选 LTS 不要选 Current</td></tr>
+<tr><td>后端框架</td><td>Spring Boot</td><td>3.x</td><td>主流企业级后端，岗位要求里出现频率最高</td></tr>
+<tr><td>数据库</td><td>PostgreSQL + PostGIS</td><td>17 + 3.5</td><td>空间数据库，GIS 岗必备技能</td></tr>
+<tr><td>前端框架</td><td>Vue 3 + Vite</td><td>3.x</td><td>国内 GIS 前端岗位主流选型</td></tr>
+<tr><td>三维引擎</td><td>Cesium</td><td>1.1xx</td><td>三维地球/地形渲染，WebGIS 高薪岗核心技能</td></tr>
+<tr><td>数据处理</td><td>Python + GeoPandas / Rasterio</td><td>3.13</td><td>复用你毕设的 Python 经验，做 DEM 与矢栅处理（3.12 也可）</td></tr>
+<tr><td>构建工具</td><td>Maven（用 mvnw 包装器）</td><td>3.9</td><td>不用单独装，项目自带 wrapper</td></tr>
+<tr><td>版本控制</td><td>Git</td><td>最新</td><td>GitHub 仓库是简历上的硬通货</td></tr>
+<tr><td>IDE</td><td>IntelliJ IDEA（统一版） / VS Code</td><td>2026.3</td><td>后端用 IDEA，前端用 VS Code，核心功能都免费</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<strong>为什么不选这三个：</strong><br>
+· <strong>不选 ArcEngine / ArcGIS 桌面端</strong> —— 你简历上的老技术，2026 年招聘基本不看，且要付费授权。<br>
+· <strong>不选 MySQL</strong> —— 空间能力弱，GIS 项目一律 PostGIS。<br>
+· <strong>不选 React</strong> —— 你会 Vue 生态更容易上手，且国内 GIS 公司 Vue 岗位更多。
+</div>
+
+<h2>二、七大模块拆解</h2>
+
+<p>每个模块都写清三件事：<strong>做什么、产出什么、怎么算做完</strong>。按这个顺序做，做完一个就提交一次 Git，不要憋大招。</p>
+
+<div class="step">
+<p class="step-title">M1 · 数据采集模块</p>
+<p class="step-time"><span class="tag">Python</span><span class="tag">第 3 周</span>约 10 小时</p>
+<p><strong>做什么：</strong></p>
+<ul>
+<li>用 <code>requests</code> + <code>BeautifulSoup</code> 抓取目标城市的降雨数据（气象站日/小时降雨量），或用公开 API（如和风天气免费额度）。</li>
+<li>下载 SRTM 30m DEM 数字高程数据（公开免费，覆盖全国）。</li>
+<li>下载 OSM 路网、水系、行政区边界（Geofabrik 提供按省打包）。</li>
+<li>统一坐标系：全部转成 <code>EPSG:4326</code>（经纬度）入库，前端展示时再转。</li>
+</ul>
+<p><strong>产出：</strong><code>data/raw/</code> 原始数据 + <code>data/clean/</code> 清洗后的 CSV / GeoJSON。</p>
+<p><strong>怎么算做完：</strong>写一个 <code>fetch.py</code>，一条命令跑完，输出干净数据；断电重跑结果一致。</p>
+</div>
+
+<div class="step">
+<p class="step-title">M2 · 空间数据处理与建模</p>
+<p class="step-time"><span class="tag">Python</span><span class="tag">第 4 周</span>约 14 小时</p>
+<p><strong>做什么：</strong></p>
+<ul>
+<li>DEM 填洼（填平内部凹陷）、计算坡度、汇流累积量——这是判断"哪里容易积水"的基础。</li>
+<li>提取低洼易涝区：高程低于周边、坡度小、汇流量大的区域。</li>
+<li>把结果做成矢量面（易涝区多边形）和栅格（风险等级图）两套。</li>
+<li>写进 PostGIS。</li>
+</ul>
+<p><strong>产出：</strong>易涝区矢量图层（<code>.shp</code> / GeoJSON）+ 风险栅格（GeoTIFF）+ 入库脚本。</p>
+<p><strong>怎么算做完：</strong>在 QGIS 或 pgAdmin 里能看到图，且和真实易涝点位置大致对得上（拿新闻里的积水点验证 2-3 个）。</p>
+<div class="box warn" style="margin-top:10px;">
+<strong>这一步最容易卡住。</strong>如果 3 天做不出来，就砍掉"汇流累积"，只用"高程 + 坡度"做简化版易涝区判定。<strong>作品不需要学术严谨，需要能跑通、能讲清逻辑。</strong>
+</div>
+</div>
+
+<div class="step">
+<p class="step-title">M3 · 空间数据库设计</p>
+<p class="step-time"><span class="tag">PostGIS</span><span class="tag">第 4 周</span>约 4 小时</p>
+<p><strong>做什么：</strong>建三张核心表，全部加空间索引（GiST）：</p>
+<pre><code>-- 易涝风险区
+CREATE TABLE flood_zone (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100),
+  risk_level SMALLINT,          -- 1低 2中 3高 4极高
+  area_m2  NUMERIC,
+  geom GEOMETRY(Polygon, 4326)
+);
+CREATE INDEX idx_flood_geom ON flood_zone USING GIST(geom);
+
+-- 降雨站点
+CREATE TABLE rain_station (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100),
+  geom GEOMETRY(Point, 4326)
+);
+
+-- 降雨记录
+CREATE TABLE rain_record (
+  id SERIAL PRIMARY KEY,
+  station_id INT REFERENCES rain_station(id),
+  obs_time TIMESTAMP,
+  rainfall_mm NUMERIC
+);
+CREATE INDEX idx_rain_time ON rain_record(obs_time);</code></pre>
+<p><strong>产出：</strong><code>schema.sql</code> 建表脚本 + 初始化数据。</p>
+<p><strong>怎么算做完：</strong>能执行 <code>SELECT ST_AsGeoJSON(geom) FROM flood_zone;</code> 拿到标准 GeoJSON。</p>
+</div>
+
+<div class="step">
+<p class="step-title">M4 · 后端服务（Spring Boot）</p>
+<p class="step-time"><span class="tag a">Spring Boot</span><span class="tag">第 5 周</span>约 16 小时</p>
+<p><strong>做什么：</strong>提供 4 个 REST 接口：</p>
+<table>
+<thead><tr><th style="width:34%">接口</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><code>GET /api/zones</code></td><td>返回全部易涝区 GeoJSON（供前端渲染）</td></tr>
+<tr><td><code>GET /api/zones/{id}</code></td><td>单个易涝区详情（面积、等级、历史积水次数）</td></tr>
+<tr><td><code>GET /api/rain?start=&amp;end=</code></td><td>按时间范围查降雨序列</td></tr>
+<tr><td><code>GET /api/risk?time=</code></td><td>给定时刻的风险等级分布（调 M5 模型）</td></tr>
+</tbody>
+</table>
+<p><strong>关键技术点：</strong>用 MyBatis 直接执行 SQL，几何字段用 <code>ST_AsGeoJSON()</code> 转字符串返回——<strong>不要用 hibernate-spatial</strong>，配置复杂、坑多，初学者容易被劝退。</p>
+<p><strong>产出：</strong>可运行的后端服务，端口 8080。</p>
+<p><strong>怎么算做完：</strong>Postman 调 4 个接口都返回 200 且数据结构正确。</p>
+</div>
+
+<div class="step">
+<p class="step-title">M5 · 风险预测模型</p>
+<p class="step-time"><span class="tag a">算法</span><span class="tag">第 6 周</span>约 10 小时</p>
+<p><strong>做什么：</strong>两层，先简后繁：</p>
+<ol>
+<li><strong>风险评分（必做）：</strong>风险 = 降雨强度 × 权重 + 地形低洼度 × 权重 + 排水能力倒数 × 权重。权重先拍脑袋给，能出分级结果就行。</li>
+<li><strong>马尔科夫链预测（复用毕设）：</strong>把你毕设里的状态转移矩阵搬过来，用历史降雨序列预测未来 7 天降雨状态，输出"未来风险趋势"。</li>
+</ol>
+<p><strong>产出：</strong>一个 <code>RiskService.java</code>，输入时间/降雨，输出风险等级。</p>
+<p><strong>怎么算做完：</strong>给一场真实暴雨的降雨数据，输出的高风险区和新闻里实际积水点大致吻合。</p>
+<div class="box good" style="margin-top:10px;">
+<strong>这是你和其他候选人拉开差距的地方。</strong>大部分转行做 WebGIS 的人只会调地图 API，你能讲清"风险怎么算出来的"——这就是 GIS 专业出身的价值。
+</div>
+</div>
+
+<div class="step">
+<p class="step-title">M6 · 三维可视化前端</p>
+<p class="step-time"><span class="tag">Vue3 + Cesium</span><span class="tag">第 7–9 周</span>约 30 小时</p>
+<p><strong>做什么：</strong></p>
+<ul>
+<li>Cesium 加载影像底图 + 地形。</li>
+<li>易涝区按风险等级着色（低=黄、中=橙、高=红、极高=深红），半透明叠加。</li>
+<li>时间轴组件：拖动滑块，看不同时刻的风险分布变化（这是"动起来"的关键，演示效果最好）。</li>
+<li>点击易涝区弹出信息框（名称、等级、面积、建议）。</li>
+<li>图例、图层开关（行政区/路网/水系/风险区）。</li>
+</ul>
+<p><strong>产出：</strong>可在浏览器打开演示的完整页面。</p>
+<p><strong>怎么算做完：</strong>能录一段 3 分钟不卡顿的演示视频，从打开页面到拖动时间轴到点击查询，一气呵成。</p>
+</div>
+
+<div class="step">
+<p class="step-title">M7 · 部署与交付</p>
+<p class="step-time"><span class="tag g">交付</span><span class="tag">第 10–11 周</span>约 12 小时</p>
+<p><strong>做什么：</strong></p>
+<ul>
+<li>前端打包 <code>npm run build</code>，后端打成 jar。</li>
+<li>本地用 Docker 或直接部署到一台便宜云服务器（学生机/阿里云轻量）。</li>
+<li>写 README：项目简介、架构图、技术栈、如何运行、截图。</li>
+<li>录 3 分钟演示视频，传 B 站或放 README 里。</li>
+</ul>
+<p><strong>产出：</strong>GitHub 仓库（含 README + 截图 + 视频链接）+ 可访问的在线地址。</p>
+<p><strong>怎么算做完：</strong>把链接发给一个不懂技术的朋友，他能自己点开看懂。</p>
+</div>
+
+<h2>三、12 周排期表</h2>
+
+<p>从 <strong>2026 年 11 月 19 日</strong> 起算，到 <strong>2027 年 2 月 10 日</strong> 收尾，正好接上春节后的"金三银四"。按每天功课结束后 2 小时 + 周末半天估算，每周 12–18 小时。</p>
+
+<table>
+<thead><tr><th style="width:8%">周次</th><th style="width:18%">日期</th><th style="width:42%">主要任务</th><th>本周产出</th></tr></thead>
+<tbody>
+<tr><td>W1</td><td>11.19–11.25</td><td>装环境（本文档第四章）+ Git 基础 + 创建项目骨架</td><td>环境全部跑通，GitHub 空仓库建好</td></tr>
+<tr><td>W2</td><td>11.26–12.02</td><td>Vue3 基础语法 + 用 Vite 建前端 + 跑通第一个 Cesium 地球</td><td>浏览器里能看到可旋转的三维地球</td></tr>
+<tr><td>W3</td><td>12.03–12.09</td><td>M1 数据采集：爬降雨 + 下 DEM + 下 OSM</td><td><code>fetch.py</code> 一条命令出干净数据</td></tr>
+<tr><td>W4</td><td>12.10–12.16</td><td>M2 空间处理 + M3 建库入库</td><td>易涝区图层能在 QGIS / pgAdmin 看到</td></tr>
+<tr><td>W5</td><td>12.17–12.23</td><td>M4 后端：Spring Boot 骨架 + 4 个接口</td><td>Postman 能拿到 GeoJSON</td></tr>
+<tr><td>W6</td><td>12.24–12.30</td><td>M5 风险模型 + 前后端联调打通第一条链路</td><td>前端能显示后端返回的易涝区</td></tr>
+<tr><td>W7</td><td>12.31–01.06</td><td>M6-1：Cesium 地形 + 影像底图 + 风险区着色</td><td>三维场景里有彩色风险区</td></tr>
+<tr><td>W8</td><td>01.07–01.13</td><td>M6-2：时间轴回放 + 点击查询弹窗</td><td>能拖动时间看变化</td></tr>
+<tr><td>W9</td><td>01.14–01.20</td><td>M6-3：图例、图层开关、移动端适配、性能优化</td><td>界面完整、不卡顿</td></tr>
+<tr><td>W10</td><td>01.21–01.27</td><td>M7：打包部署 + README + 截图</td><td>在线可访问地址</td></tr>
+<tr><td>W11</td><td>01.28–02.03</td><td>录演示视频 + 简历包装这个项目 + 写技术博客</td><td>视频 + 简历新版本</td></tr>
+<tr><td>W12</td><td>02.04–02.10</td><td>缓冲周：补欠账 + 复盘 + 准备年后的投递清单</td><td>项目定稿，进入求职状态</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<strong>排期的三条铁律：</strong><br>
+① <strong>每周必须有可运行的东西</strong>，哪怕很丑。烂尾的项目都是从"想一次做完美"开始的。<br>
+② <strong>W12 是缓冲，不是加任务</strong>。前 11 周一定有延期，这周就是用来还债的。<br>
+③ <strong>如果某周完全没动</strong>，不要下周补双倍，直接跳过——把 W12 拿来补，别打乱节奏。
+</div>
+
+<h2>四、环境配置教程（Windows 从零）</h2>
+
+<div class="box danger">
+<strong>先说本机实测结论（2026.11.19 检测）：</strong>这台机器不是"从零"，但也不是"能用"——它处在一个容易误判的状态。<br><br>
+<table style="margin:8px 0;">
+<thead><tr><th style="width:22%">项</th><th style="width:16%">状态</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>硬件</td><td>✅ 够用</td><td>Win10 19045 / i5-12600KF / 31.8GB 内存 / 磁盘充裕，跑这套毫无压力</td></tr>
+<tr><td>JDK 21</td><td>⚠️ 已装未配</td><td>已装 Microsoft JDK 21.0.7，<code>java</code> 可用，但 <strong>JAVA_HOME 为空</strong>，只需补环境变量，<strong>不用重装</strong></td></tr>
+<tr><td>Git</td><td>❌ 缺</td><td>命令能跑，但那是开发工具内置的 PortableGit，<code>C:\Program Files\Git</code> 不存在</td></tr>
+<tr><td>Node.js</td><td>❌ 缺</td><td>v22.22.2 是内置副本，你开自己的 CMD 敲 <code>node</code> 无效</td></tr>
+<tr><td>Python</td><td>❌ 假的</td><td>系统 PATH 指向 WindowsApps 商店占位符，<strong>必须重装</strong></td></tr>
+<tr><td>PostgreSQL</td><td>❌ 未装</td><td>无服务、无目录、无 psql</td></tr>
+<tr><td>IDEA / VS Code</td><td>❌ 未装</td><td>—</td></tr>
+</tbody>
+</table>
+<strong>所以：第 2 步（JDK）跳过重装，只补 JAVA_HOME；其余照做。</strong>
+</div>
+
+<p>一共 8 步，按下面这个<strong>优先级顺序</strong>做（不是编号顺序），每步做完立刻验证。装 PostgreSQL 最耗时，建议放在有整块时间的周末。</p>
+
+<table>
+<thead><tr><th style="width:10%">优先级</th><th style="width:26%">装什么</th><th style="width:30%">装到哪</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Python 3.13</td><td><code>D:\dev\Python313</code></td><td>假 Python 会直接卡死第一步数据采集</td></tr>
+<tr><td>2</td><td>PostgreSQL 18 + PostGIS 3.7</td><td><code>D:\dev\PostgreSQL\18</code></td><td>空间数据底座，安装最耗时，早装早安心</td></tr>
+<tr><td>3</td><td>Git</td><td><code>D:\dev\Git</code></td><td>要建 GitHub 仓库，作品集的门面</td></tr>
+<tr><td>4</td><td>Node.js 26 LTS</td><td><code>D:\dev\nodejs</code></td><td>前端必需，且不能依赖工具自带的副本</td></tr>
+<tr><td>5</td><td>补 JAVA_HOME</td><td>系统变量</td><td>1 分钟的事，不补 IDEA 构建会报错</td></tr>
+<tr><td>6</td><td>VS Code / IDEA</td><td><code>D:\dev\VSCode</code> / <code>D:\dev\JetBrains</code></td><td>写代码的编辑器</td></tr>
+</tbody>
+</table>
+
+<div class="box">
+<strong>开始前确认：</strong>本机 Win10 64 位已验证通过，内存 31.8GB 远超要求，C 盘剩 71G、D 盘剩 319G，空间充足。<br><br>
+<strong>贯穿全程的两条铁律：</strong><br>
+① <strong>能装 D 盘的一律装 D 盘</strong>（<code>D:\dev\</code>），C 盘只留系统 + 已装的 JDK。缓存目录也一并挪走，见「四·五」节。<br>
+② <strong>路径纯英文、无空格</strong>，不要放中文目录，不要放桌面。
+</div>
+
+<div class="step">
+<p class="step-title">第 1 步 · 安装 Git</p>
+<p class="step-time"><span class="tag">约 5 分钟</span></p>
+<p><strong>下载：</strong>官网 <code>https://git-scm.com/download/win</code> 在国内经常只有几十 KB/s，别等。<strong>直接用下面两个国内镜像</strong>（都是官方安装包的原样拷贝，文件签名一致）。</p>
+
+<table>
+<thead><tr><th style="width:26%">镜像</th><th style="width:44%">链接</th><th>实测速度</th></tr></thead>
+<tbody>
+<tr><td><strong>华为云</strong>（首选）</td><td><code>https://mirrors.huaweicloud.com/git-for-windows/</code></td><td><strong>39.8 MB/s</strong><br><span style="color:#666;font-size:12px;">版本最新，当前 2.56.1</span></td></tr>
+<tr><td><strong>淘宝 npmmirror</strong><br><span style="color:#666;font-size:12px;">（备用）</span></td><td><code>https://registry.npmmirror.com/-/binary/git-for-windows/</code></td><td>11.7 MB/s<br><span style="color:#666;font-size:12px;">当前 2.55.0.5</span></td></tr>
+</tbody>
+</table>
+<p style="color:#666;font-size:12px;margin-top:-4px;">速度为本机 2026-11-19 实测。65MB 的安装包在华为云上约 <strong>2 秒</strong>下完，官网可能要半小时。</p>
+
+<p><strong>怎么点到具体文件：</strong>打开镜像目录后是一串版本文件夹（<code>v2.56.1.windows.1/</code> 这种），<strong>挑版本号最大的那个</strong>点进去，再下 <code>Git-2.56.1-64-bit.exe</code>。</p>
+
+<div class="box warn" style="margin-top:10px;">
+<strong>只下这两种文件名：</strong><br>
+· ✅ <code>Git-2.x.x-64-bit.exe</code> ← <strong>要这个</strong>，标准安装版<br>
+· ⚠️ <code>PortableGit-2.x.x-64-bit.7z.exe</code> ← 便携版，免安装。好处是完全不写 C 盘、不写注册表，解压到 <code>D:\dev\Git</code> 加个 PATH 就能用；代价是没有右键菜单、没有文件关联。想彻底不碰 C 盘可以选它<br>
+· ❌ <code>MinGit-</code> 开头的是给 CI/CD 用的精简包，不含完整功能，别下<br>
+· ❌ <code>-arm64</code> 是 ARM 芯片机器用的，你是 Intel i5-12600KF，选 <code>64-bit</code>
+</div>
+
+<div class="box good" style="margin-top:10px;">
+<strong>不放心文件安全性？</strong>下完右键安装包 → 属性 → 数字签名，签名者应为 <strong>Software Freedom Conservancy</strong> 或 <strong>Git for Windows</strong>。镜像站给的是官方原包，签名是对得上的。
+</div>
+
+<p><strong>安装：</strong>一路 Next，只在这两个地方留意——</p>
+<ul>
+<li><strong>安装目录改成 <code>D:\dev\Git</code></strong>（默认是 C 盘 Program Files，改到 D 盘）。</li>
+<li>"Adjusting your PATH environment" 选 <strong>Git from the command line and also from 3rd-party software</strong>（默认选项）。</li>
+<li>其余全部默认。</li>
+</ul>
+<p><strong>验证：</strong>新开一个终端（Win+R 输入 cmd），执行：</p>
+<pre><code>git --version</code></pre>
+<p>看到 <code>git version 2.x.x</code> 即可。</p>
+<p><strong>顺手配置身份</strong>（提交记录会用到）：</p>
+<pre><code>git config --global user.name "你的名字"
+git config --global user.email "你的邮箱"</code></pre>
+<div class="box warn" style="margin-top:10px;">
+<strong>注意：</strong>装完必须<strong>重新打开终端</strong>，旧窗口读不到新的 PATH。
+</div>
+</div>
+
+<div class="step">
+<p class="step-title">第 2 步 · 配置 JDK 21 <span style="color:#3b6d11;font-size:12px;">（本机已装，跳过安装）</span></p>
+<p class="step-time"><span class="tag g">已安装</span><span class="tag">约 2 分钟</span></p>
+<div class="box good" style="margin-top:0;">
+<strong>本机实测：</strong>已安装 Microsoft JDK 21.0.7，路径 <code>C:\Users\Administrator\AppData\Local\Programs\Microsoft\jdk-21.0.7.6-hotspot</code>，<code>java -version</code> 正常。<strong>不需要重装</strong>，只需要补 <code>JAVA_HOME</code>（当前为空，不补的话 IDEA 构建和 Maven 会报错）。
+</div>
+<p><strong>怎么做：</strong>Win+R 输入 <code>sysdm.cpl</code> → 高级 → 环境变量 → 在<strong>系统变量</strong>里新建：</p>
+<pre><code>变量名：JAVA_HOME
+变量值：C:\Users\Administrator\AppData\Local\Programs\Microsoft\jdk-21.0.7.6-hotspot</code></pre>
+<p>然后编辑系统变量 <code>Path</code>，新增一条：</p>
+<pre><code>%JAVA_HOME%\bin</code></pre>
+<p><strong>验证（必须新开终端）：</strong></p>
+<pre><code>echo %JAVA_HOME%
+java -version</code></pre>
+<p>第一行显示出 JDK 路径（<strong>结尾不能带 <code>\bin</code></strong>），第二行显示 <code>openjdk version "21.0.7"</code> 即完成。</p>
+<div class="box danger" style="margin-top:10px;">
+<strong>两个必须注意的点：</strong><br>
+① JAVA_HOME 只写到 JDK 根目录，<strong>不要</strong>写成 <code>...\bin</code>——这是最高频的坑。<br>
+② 本机当前 <code>Path</code> 里已有 JDK 的 bin 直接路径，保留没问题，但也要加 <code>%JAVA_HOME%\bin</code>，否则 Maven 找不到。
+</div>
+<p style="color:#888780;font-size:12.5px;margin-top:12px;">（如果你后来想换成 Temurin 版：<code>https://adoptium.net/temurin/releases/?version=21</code>，选 Windows x64 JDK msi，安装时把 "Set JAVA_HOME variable" 设为本地安装。功能上微软版和 Temurin 版对本项目没有区别。）</p>
+</div>
+
+<div class="step">
+<p class="step-title">第 3 步 · 安装 Node.js</p>
+<p class="step-time"><span class="tag r">本机需重装</span><span class="tag">约 10 分钟</span></p>
+<div class="box danger" style="margin-top:0;">
+<strong>本机实测：</strong>虽然能查到 v22.22.2，但它位于 <code>C:\Users\Administrator\.workbuddy\binaries\node\</code>——是工具自带的副本，不在你的系统 PATH 里。你自己打开 CMD 敲 <code>node</code> 会失败。所以<strong>必须自己装一份</strong>。
+</div>
+<p><strong>当前 LTS 版本：v26.13.1</strong>（2026.11 核实；npm 11.20.0 随包附带）。</p>
+<p><strong>下载：</strong><code>https://nodejs.org/zh-cn/download</code>，页面默认选中 LTS，点左下角 <strong>「Windows 安装程序(.msi)」</strong>。</p>
+
+<div class="box danger" style="margin-top:10px;">
+<strong>页面顶部那个 fnm 方案，别用。</strong>官网现在默认推荐用 fnm（Node 版本管理器）装，代码框里还给了 <code>winget install Schniz.fnm</code> —— 对你不合适，原因三条：<br>
+① <code>winget</code> 在国内拉包同样慢，还会碰到源不可用；<br>
+② fnm 默认把 Node 装在 <code>C:\Users\Administrator\AppData\Roaming\fnm</code>，<strong>直接违背你"不装 C 盘"的要求</strong>，要改还得手动设 <code>FNM_DIR</code>；<br>
+③ 装完还要改 PowerShell profile、跑 <code>fnm env</code> 才能生效，多一层配置就多一个出错点。<br>
+<strong>你只有一个项目、只用一个版本，msi 一步到位，装到 <code>D:\dev\nodejs</code> 就行。</strong>
+</div>
+
+<table>
+<thead><tr><th style="width:26%">镜像</th><th style="width:44%">链接</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><strong>华为云</strong>（首选）</td><td><code>https://mirrors.huaweicloud.com/nodejs/v26.13.1/</code></td><td>下 <code>node-v26.13.1-x64.msi</code>（35MB）</td></tr>
+<tr><td>淘宝 npmmirror</td><td><code>https://registry.npmmirror.com/-/binary/node/</code></td><td><code>latest-v26.x</code> 目录同步滞后，建议直接用华为云</td></tr>
+</tbody>
+</table>
+
+<div class="box good" style="margin-top:10px;">
+<strong>校验哈希（可选但推荐）：</strong>官方 <code>SHASUMS256.txt</code> 里 <code>node-v26.13.1-x64.msi</code> 对应<br>
+<code style="word-break:break-all;">0398ced8446e119478c724d1aa37c5afd6aa1a76fceab12787eb9714c5ed8b45</code><br>
+本机已按此校验通过。验证命令：<code>certutil -hashfile node-v26.13.1-x64.msi SHA256</code>
+</div>
+
+<div class="box warn" style="margin-top:10px;">
+不要下 "Current"（奇数版本，如 27.x）——新手用 Current 容易遇到依赖不兼容。<strong>认准 LTS 那个绿色标。</strong>
+</div>
+
+<p><strong>安装：</strong>向导里<strong>把安装目录改成 <code>D:\dev\nodejs</code></strong>（默认是 C 盘），其余一路 Next，保持 <strong>Add to PATH</strong> 勾选。</p>
+<p><strong>验证（新开终端）：</strong></p>
+<pre><code>node -v
+npm -v
+where node</code></pre>
+<p>显示版本号，且 <code>where node</code> 指向 <code>D:\dev\nodejs\node.exe</code>（<strong>不是 .workbuddy 目录</strong>）即正确。</p>
+<p><strong>配置国内镜像</strong>（不然装依赖会很慢；本机当前还是官方源，必须改）：</p>
+<pre><code>npm config set registry https://registry.npmmirror.com
+npm config get registry</code></pre>
+<p>最后一行应显示 <code>https://registry.npmmirror.com/</code>。</p>
+</div>
+
+<div class="step">
+<p class="step-title">第 4 步 · 安装 PostgreSQL 18 + PostGIS 3.7</p>
+<p class="step-time"><span class="tag r">本机完全未装</span><span class="tag">约 25 分钟</span>这一步最关键</p>
+<div class="box danger" style="margin-top:0;">
+<strong>本机实测：</strong>无 <code>psql</code> 命令、无 PostgreSQL 服务、无任何安装目录，<code>5432</code> 端口空闲。<strong>要从头完整安装</strong>。这是全部 8 步里最耗时、最容易出错的一步，建议留出一整块时间，别在零碎时间做。
+</div>
+
+<div class="box warn">
+<strong>版本选择：选 18.7，不要选页面最上面的 19.0。</strong><br>
+EDB 下载页现在列的是 19.0 / 18.7 / 17.12 / 16.16 / 15.20 / 14.25。看起来 19.0 最新，但它是 2026 年 9–10 月才发的<strong>首个大版本</strong>，而 PostGIS 3.7 的 Windows Bundle <strong>2026 年 11 月 11 日</strong>才发布——你可能是第一批踩坑的人。<br>
+<strong>18.7 才是正确选择</strong>：PG 18 发布于 2025 年 9 月，已经修到第 7 个补丁版本，成熟；而且 PostGIS 官方明确写了「Bundle 3.7.0 installers for PostgreSQL <strong>18–19</strong>」，Stack Builder 里一定选得到。<br>
+<strong>也不用退到 17</strong>：PostGIS 官网原文是「Installers for 15-17 are on the way」——3.7 的 15–17 版 Bundle 还没出，Stack Builder 里能不能选到旧版 Bundle 不确定，反而增加风险。<br>
+一句话：<strong>18 是「够新 + 够稳 + PostGIS 确定支持」三者唯一的交集。</strong>
+</div>
+
+<p><strong>下载：</strong><code>https://www.enterprisedb.com/downloads/postgres-postgresql-downloads</code><br>
+找到 <strong>18.7</strong> 那一行，点 <strong>Windows x86-64</strong> 列的下载图标（约 350MB）。</p>
+
+<p><strong>4.1 安装 PostgreSQL 本体：</strong></p>
+<ul>
+<li>安装目录：改成 <code>D:\dev\PostgreSQL\18</code>（别放 C 盘默认路径，也别放中文路径）。</li>
+<li>数据目录：默认即可（会在安装目录下建 data）。</li>
+<li>组件：<strong>全选</strong>（PostgreSQL Server + pgAdmin 4 + Stack Builder + Command Line Tools）。</li>
+<li><strong>超级用户密码：设一个你记得住的</strong>，比如 <code>postgres</code>。本地开发用，简单点没关系，但要记住。</li>
+<li>端口：<strong>5432</strong>，不要改。</li>
+<li>区域设置：默认。</li>
+<li>最后一步会出现 "Launch Stack Builder"，<strong>先勾上</strong>，点 Finish。</li>
+</ul>
+
+<p><strong>4.2 用 Stack Builder 装 PostGIS：</strong></p>
+<ul>
+<li>Stack Builder 启动后，选择刚装的 <code>PostgreSQL 18 on port 5432</code>，Next。</li>
+<li>展开 <strong>Spatial Extensions</strong> → 勾选名字里带 <strong>「for PostgreSQL 18」</strong>的那个 Bundle（写的是 <code>PostGIS 3.7.0 Bundle for PostgreSQL 18</code>；如果列表里显示 3.6.x for PG 18，选它也完全可用），Next。</li>
+<li>下载 → 一路 Next 安装，<strong>安装路径必须和 PostgreSQL 安装目录一致</strong>（<code>D:\dev\PostgreSQL\18</code>）。</li>
+</ul>
+
+<p><strong>4.3 建库并启用 PostGIS 扩展：</strong></p>
+<p>打开 pgAdmin 4（开始菜单里找），或直接用命令行：</p>
+<pre><code>cd D:\dev\PostgreSQL\18\bin
+psql -U postgres
+
+-- 进入 psql 后依次执行：
+CREATE DATABASE floodgis;
+\c floodgis
+CREATE EXTENSION postgis;
+SELECT postgis_version();</code></pre>
+<p>最后一行返回类似 <code>3.7 USE_GEOS=1 USE_PROJ=1 USE_STATS=1</code> 就成功了。<code>\q</code> 退出。</p>
+
+<div class="box danger">
+<strong>这一步的三个致命坑：</strong><br>
+① <strong>PostGIS 版本必须匹配 PostgreSQL 主版本</strong>。PG 18 就必须选带「for PostgreSQL 18」的 Bundle，带 17 或 19 的都会失败。这一步看错一个数字，后面全废。<br>
+② <strong>CREATE EXTENSION 必须在目标库里执行</strong>。很多人忘了 <code>\c floodgis</code>，在 postgres 默认库里建，结果项目连的库没有扩展。<br>
+③ <strong>忘了 postgres 密码</strong> → 只能重装。装的时候就记在备忘录里。
+</div>
+</div>
+
+<div class="step">
+<p class="step-title">第 5 步 · 安装 IntelliJ IDEA（统一版）</p>
+<p class="step-time"><span class="tag">约 10 分钟</span></p>
+<div class="box warn" style="margin-top:0;">
+<strong>先说明：Community 版已经没有了，这不是你找错页面。</strong><br>
+从 <strong>2025.3 版本</strong>起，JetBrains 把 Community Edition 和 Ultimate 合并成了<strong>一个统一版本</strong>，只提供一个安装包。原来 Community 的全部功能依然<strong>免费</strong>，而且免费范围内还多了几样东西。
+</div>
+<p><strong>下载：</strong><code>https://www.jetbrains.com/idea/download/</code> → 页面上只有一个下载按钮（Windows 版 <code>.exe</code>，当前 2026.3）。不用再找版本对比表，那个已经取消了。</p>
+<p><strong>免费范围到底包含什么（这是你最关心的）：</strong></p>
+<ul>
+<li>Java / Kotlin 全部核心开发功能 —— 和旧 Community 一致，<strong>永久免费，不需要激活码、不需要登录</strong></li>
+<li><strong>额外送的</strong>：Spring Boot 项目向导、Spring / Thymeleaf 基础语法高亮、数据库连接与表结构浏览、完整 SQL 支持</li>
+<li><strong>要订阅才有的</strong>：完整 Spring 支持（Bean 跳转、依赖注入图）、前端框架深度支持、AI 助手、高级数据库工具</li>
+</ul>
+<p><strong>安装：</strong><strong>安装目录改成 <code>D:\dev\JetBrains</code></strong>（IDEA 本体加缓存能到 3–5GB，别放 C 盘），勾选创建桌面快捷方式。</p>
+<p><strong>第一次启动会问你试用：</strong>装完打开时会弹 <em>Start 30-day Ultimate trial</em>。有两个选择——</p>
+<ul>
+<li>点 <strong>Start trial</strong>：白拿 30 天完整功能（含完整 Spring 支持），<strong>不需要绑卡</strong>，到期自动降级</li>
+<li>点 <strong>Continue for free</strong>（或 Skip）：直接用免费功能，也完全够你做完这个项目</li>
+</ul>
+<p>两个都不会锁死你。试用到期后不会打不开、也不用重装，只是高级功能变灰——这一点和很多商业软件不一样，可以放心点。</p>
+<p><strong>缓存位置：已处理完毕，无需再操作</strong></p>
+<div class="box good" style="margin-top:0;">
+本机已完成迁移，实际配置如下：<br>
+· 配置 <code>D:\dev\cache\idea\config</code>（13MB）<br>
+· 索引缓存 <code>D:\dev\cache\idea\system</code>（345MB，会随项目增长到 1–2GB）<br>
+· 日志 <code>D:\dev\cache\idea\log</code><br>
+写入位置是 <code>D:\dev\JetBrains\bin\idea.properties</code> 末尾的三行（原文件已备份为 <code>idea.properties.bak</code>）。<br>
+<strong>注意：</strong>以后升级 IDEA 大版本时，安装器可能会覆盖 <code>bin\idea.properties</code>，届时检查一下这三行还在不在；丢了就重新加。
+</div>
+<p><strong>如果你想自己改（换机器时用）：</strong>打开 IDEA → Help → Edit Custom Properties → 写入上面三条路径，效果一样。</p>
+<p><strong>验证：</strong>能打开就算成功，第一次启动会让你选主题，随便选。</p>
+</div>
+
+<div class="step">
+<p class="step-title">第 6 步 · 安装 VS Code</p>
+<p class="step-time"><span class="tag">约 10 分钟</span></p>
+<p><strong>下载：</strong><code>https://code.visualstudio.com/</code> → Windows 用户安装包。</p>
+<p><strong>安装：</strong><strong>路径改成 <code>D:\dev\VSCode</code></strong>，勾选"添加到 PATH"和"通过 Code 打开"两个右键菜单项。</p>
+<p><strong>装完打开，安装 3 个插件</strong>（左侧扩展图标，搜名字）：</p>
+<ul>
+<li><strong>Vue - Official</strong>（Vue3 语法支持，必装）</li>
+<li><strong>ESLint</strong>（代码检查）</li>
+<li><strong>Prettier - Code formatter</strong>（自动格式化）</li>
+</ul>
+</div>
+
+<div class="step">
+<p class="step-title">第 7 步 · 安装 Python + 空间数据处理库 <span style="color:#a32d2d;font-size:12px;">（本机必做，当前是假 Python）</span></p>
+<p class="step-time"><span class="tag r">必须重装</span><span class="tag">约 20 分钟</span></p>
+<div class="box warn" style="margin-top:0;">
+<strong>本机情况（已处理）：</strong>系统原来 PATH 里的 <code>python</code> 指向 <code>C:\Users\Administrator\AppData\Local\Microsoft\WindowsApps\python.exe</code>——微软商店的<strong>占位符</strong>，执行会跳转商店。<br>
+现已通过关闭「应用执行别名」清掉（设置 → 应用 → 高级应用设置 → 应用执行别名 → <code>python.exe</code> / <code>python3.exe</code> 两个开关）。换机器时这一步别忘。
+</div>
+<p><strong>已装完成，本机实际状态如下：</strong></p>
+<div class="box good" style="margin-top:0;">
+· 版本 <strong>Python 3.13.17</strong>，装在 <code>D:\dev\Python313</code>（C 盘零占用）<br>
+· <code>Add python.exe to PATH</code> 已生效，<code>where python</code> 只解析出一个路径，指向 D 盘<br>
+· WindowsApps 的两个别名桩（<code>python.exe</code> / <code>python3.exe</code>）已关闭<br>
+· pip 指向清华源，缓存目录 <code>D:\dev\cache\pip</code><br>
+· 依赖已全部安装（31 个包，36 秒），<code>site-packages</code> 约 457MB<br>
+<span style="color:#2f6b3f;">已装版本：geopandas 1.2.0 / rasterio 1.5.2 / shapely 2.2.0 / pyproj 3.8.0 / fiona 1.10.1 / pandas 3.1.1 / numpy 2.5.5 / psycopg2 2.9.13</span>
+</div>
+
+<p><strong>换机器重装时这么做：</strong></p>
+<p><strong>① 先清掉假 Python</strong>：设置 → 应用 → 高级应用设置 → 应用执行别名 → 关掉 <code>python.exe</code> 和 <code>python3.exe</code> 两个开关。</p>
+<p><strong>② 下载：</strong><code>https://www.python.org/downloads/</code>，或国内镜像 <code>https://mirrors.huaweicloud.com/python/&lt;版本号&gt;/</code>（快得多）。</p>
+<div class="box danger" style="margin-top:0;">
+<strong>选版本有个坑：</strong>不要挑 3.13 分支里数字最大的那个。Python 的<strong>安全更新版</strong>（如 3.13.18）<strong>不提供 Windows 二进制安装包</strong>，下载会直接 404。<br>
+3.13 分支最后一个带完整安装包的是 <strong>3.13.17</strong>（29,941,280 字节）。下载后可用官方 <code>python.org/ftp/python/3.13.17/</code> 对照文件大小。
+</div>
+<div class="box danger" style="margin-top:0;">
+安装界面<strong>第一屏点 <code>Customize installation</code>，不要点 <code>Install Now</code></strong>——后者会把 Python 装进 <code>C:\Users\...\AppData\Local\Programs\Python</code>，路径改不了。<br>
+第一屏勾选 <strong>"Add python.exe to PATH"</strong>；到 Advanced Options 页把 <code>Customize install location</code> 改成 <code>D:\dev\Python313</code>，并确认 <strong>"Add Python to environment variables"</strong> 仍是勾上的。
+</div>
+<p><strong>验证（新开终端）：</strong></p>
+<pre><code>python --version
+where python</code></pre>
+<p>第一行应显示 <code>Python 3.13.x</code>；第二行应指向 <code>D:\dev\Python313\python.exe</code>，<strong>且只有一条结果</strong>——如果还出现 WindowsApps 那条，说明别名没关干净。</p>
+
+<p><strong>安装空间数据处理库：</strong></p>
+<pre><code>python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+python -m pip config set global.cache-dir D:/dev/cache/pip
+cd D:\wb\urban-flood-gis\pipeline
+python -m pip install -r requirements.txt</code></pre>
+<p>上面第三行用的是项目里现成的 <code>requirements.txt</code>，比手敲包名可靠。实测清华源下 31 个包 36 秒装完。</p>
+
+<p><strong>验证：</strong></p>
+<pre><code>python -c "import geopandas, rasterio, shapely, psycopg2; print('ok')"</code></pre>
+<p>输出 <code>ok</code> 就成功。更彻底一点，跑一遍几何计算和坐标转换（这两项才能证明 GEOS / PROJ 真的可用）：</p>
+<pre><code>python -c "from shapely.geometry import Polygon; print(Polygon([(0,0),(0,1),(1,1),(1,0)]).buffer(0.5).area)"
+python -c "from pyproj import Transformer; print(Transformer.from_crs('EPSG:4326','EPSG:3857',always_xy=True).transform(114.3,30.5))"</code></pre>
+<p>第一行应输出大于 1 的面积值；第二行应输出 <code>(12723818.5..., 3567983.1...)</code>，即武汉在 Web 墨卡托下的坐标。</p>
+
+<div class="box warn">
+<strong>如果 geopandas 或 rasterio 装不上</strong>（Windows 上偶发编译失败）：<br>
+① 先试升级构建工具：<code>python -m pip install --upgrade pip setuptools wheel</code>，再重装；<br>
+② 还不行就装 <strong>Miniforge</strong>（<code>https://conda-forge.org/download/</code>），然后用 <code>conda install -c conda-forge geopandas rasterio</code>，conda 的预编译包最稳。
+</div>
+</div>
+
+<div class="step">
+<p class="step-title">第 8 步 · 装数据库客户端（可选但建议）</p>
+<p class="step-time"><span class="tag">约 5 分钟</span></p>
+<p>pgAdmin 已经随 PostgreSQL 装了，够用。如果想要更顺手的界面，装 <strong>DBeaver Community</strong>（免费）：<code>https://dbeaver.io/download/</code></p>
+<p>连接参数：Host <code>localhost</code>，Port <code>5432</code>，Database <code>floodgis</code>，User <code>postgres</code>，密码你设的那个。</p>
+</div>
+
+<h2>四·五、C 盘保护：缓存与项目位置</h2>
+
+<p>光把软件装到 D 盘还不够——<strong>真正的 C 盘杀手是缓存和依赖仓库</strong>，它们默认全在 C 盘用户目录下，用着用着就吃进去十几 G。装完软件，把这几个也改到 D 盘。</p>
+
+<h3>1. npm 缓存（容易到 1–2GB）</h3>
+<pre><code>npm config set cache "D:\dev\cache\npm"
+npm config set prefix "D:\dev\cache\npm-global"
+npm config get cache</code></pre>
+
+<h3>2. pip 缓存</h3>
+<pre><code>python -m pip config set global.cache-dir "D:\dev\cache\pip"</code></pre>
+
+<h3>3. Maven 本地仓库（最容易失控，几个 G 很常见）</h3>
+<p>默认在 <code>C:\Users\Administrator\.m2\repository</code>。先建目录，再编辑或新建 <code>C:\Users\Administrator\.m2\settings.xml</code>：</p>
+<pre><code>&lt;settings&gt;
+  &lt;localRepository&gt;D:/dev/cache/maven-repo&lt;/localRepository&gt;
+&lt;/settings&gt;</code></pre>
+<p>IDEA 里也可以直接改：Settings → Build, Execution, Deployment → Build Tools → Maven → Local repository。</p>
+
+<h3>4. 项目位置</h3>
+<p>所有代码和数据放 <code>D:\wb</code>，不要放 C 盘的桌面或文档：</p>
+<pre><code>D:\wb\
+├── urban-flood-gis\         ← 本项目
+└── 2026-11-19-17-53-58\     ← 咨询产出工作区</code></pre>
+
+<div class="box warn">
+<strong>为什么这么在意 C 盘：</strong>你现在 C 盘剩 71G，看着够用。但 <code>node_modules</code>（几百 MB）、Maven 仓库（几个 G）、DEM 与 GeoTIFF 数据（几百 MB）、IDEA 索引（1–2G）叠起来，半年就能吃掉 20G。提前规划好，比将来清理省事得多。
+</div>
+
+<h3>完整安装位置对照</h3>
+
+<table>
+<thead><tr><th style="width:22%">工具</th><th style="width:40%">安装路径</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>JDK 21</td><td><code>C:\Users\Administrator\AppData\Local\Programs\Microsoft\jdk-21.0.7.6-hotspot</code></td><td>已装，保持原位</td></tr>
+<tr><td>PostgreSQL 18</td><td><code>D:\dev\PostgreSQL\18</code></td><td>含 PostGIS</td></tr>
+<tr><td>Python 3.13</td><td><code>D:\dev\Python313</code></td><td>已装 3.13.17</td></tr>
+<tr><td>Node.js</td><td><code>D:\dev\nodejs</code></td><td>不要用内置副本</td></tr>
+<tr><td>Git</td><td><code>D:\dev\Git</code></td><td>—</td></tr>
+<tr><td>IntelliJ IDEA</td><td><code>D:\dev\JetBrains</code></td><td>统一版，核心功能免费</td></tr>
+<tr><td>VS Code</td><td><code>D:\dev\VSCode</code></td><td>—</td></tr>
+<tr><td>各类缓存</td><td><code>D:\dev\cache\</code></td><td>npm / pip / maven / idea</td></tr>
+<tr><td>项目</td><td><code>D:\wb\urban-flood-gis</code></td><td>已创建</td></tr>
+</tbody>
+</table>
+
+<div class="box good">
+<strong>项目骨架已经建好了。</strong>打开 <code>D:\wb\urban-flood-gis</code> 就能看到完整目录：docs（文档）、backend（后端）、frontend（前端）、pipeline（Python 脚本）、sql（建表脚本）、data（数据）、scripts（启动脚本）。详细说明见项目里的 <code>README.md</code> 和 <code>docs\环境与路径规划.md</code>。
+</div>
+
+<h2>五、一次性验证清单</h2>
+
+<p>8 步装完，<strong>新开一个终端</strong>，把下面这些命令逐条跑一遍。全部有正常输出，环境才算好了。</p>
+
+<table>
+<thead><tr><th style="width:30%">命令</th><th style="width:34%">期望输出</th><th>本机当前状态</th></tr></thead>
+<tbody>
+<tr><td><code>git --version</code></td><td>git version 2.x.x</td><td style="color:#3b6d11;">✅ 2.56.1（D:\dev\Git）</td></tr>
+<tr><td><code>java -version</code></td><td>openjdk version "21.x.x"</td><td style="color:#3b6d11;">✅ 21.0.7</td></tr>
+<tr><td><code>echo %JAVA_HOME%</code></td><td>JDK 根目录（不带 \bin）</td><td style="color:#3b6d11;">✅ 已设（系统级）</td></tr>
+<tr><td><code>node -v</code></td><td>v26.x.x</td><td style="color:#3b6d11;">✅ v26.13.1</td></tr>
+<tr><td><code>npm -v</code></td><td>11.x.x</td><td style="color:#3b6d11;">✅ 11.20.0</td></tr>
+<tr><td><code>npm config get registry</code></td><td>https://registry.npmmirror.com/</td><td style="color:#3b6d11;">✅ 已改为淘宝源</td></tr>
+<tr><td><code>psql -U postgres -c "SELECT version();"</code></td><td>PostgreSQL 18.x</td><td style="color:#3b6d11;">✅ 18.7（bin 已进 PATH）</td></tr>
+<tr><td><code>psql -U postgres -d floodgis -c "SELECT postgis_version();"</code></td><td>3.7 USE_GEOS=1 ...</td><td style="color:#3b6d11;">✅ 3.7.0，5 表 6 索引 2 视图已建</td></tr>
+<tr><td><code>python --version</code></td><td>Python 3.13.x</td><td style="color:#3b6d11;">✅ 3.13.17（D:\dev\Python313）</td></tr>
+<tr><td><code>python -c "import geopandas, rasterio; print('ok')"</code></td><td>ok</td><td style="color:#3b6d11;">✅ ok（31 个包已装）</td></tr>
+</tbody>
+</table>
+
+<div class="box good">
+<strong>当前进度：10 项全部达标，环境已就绪。</strong><br>
+<code>floodgis</code> 库已建好：5 张表（flood_zone / rain_station / rain_record / admin_boundary / risk_snapshot）、6 个 <code>idx_</code> 空间索引、2 个视图（v_flood_zone_geojson / v_risk_summary），PostGIS 3.7.0 已启用。<br>
+<strong>下一步：</strong>把 postgres 密码写进后端的 <code>application.yml</code>，然后按第六章开始第一周——建仓库、搭后端空壳、让 Cesium 地球转起来。
+</div>
+
+<div class="box">
+<strong>如果 <code>psql</code> 提示"不是内部或外部命令"：</strong>说明 bin 目录没进 PATH。本机已加入用户 PATH（<code>D:\dev\PostgreSQL\18\bin</code>）；换机器时手动加：设置 → 系统 → 高级系统设置 → 环境变量 → 用户变量 Path → 新建 <code>D:\dev\PostgreSQL\18\bin</code>，然后<strong>重开终端</strong>。
+</div>
+
+<h2>六、项目骨架与第一周动手</h2>
+
+<p>环境好了之后，第一周就干三件事：建仓库、搭后端、搭前端。<strong>不要先写业务代码，先把"空壳"跑起来。</strong></p>
+
+<h3>6.1 建 GitHub 仓库</h3>
+<ol>
+<li>登录 GitHub，New repository，名字 <code>urban-flood-gis</code>，<strong>不勾</strong> Initialize with README。</li>
+<li>项目目录<strong>已经建好了</strong>，直接在现有目录里初始化：</li>
+</ol>
+<pre><code>cd D:\wb\urban-flood-gis
+git init
+git remote add origin https://github.com/你的用户名/urban-flood-gis.git
+git add .
+git commit -m "init: 项目初始化（骨架 + 文档 + SQL）"
+git branch -M main
+git push -u origin main</code></pre>
+<div class="box good">
+<strong>不用再 mkdir 了。</strong>我已经在 <code>D:\wb\urban-flood-gis</code> 建好完整骨架：<code>docs/</code>（文档）、<code>backend/</code>、<code>frontend/</code>、<code>pipeline/</code>（Python）、<code>sql/</code>、<code>data/</code>、<code>scripts/</code>，还有 README、.gitignore 和建表脚本。直接 <code>git init</code> 就能提交。
+</div>
+
+<h3>6.2 搭后端（Spring Boot）</h3>
+<p>浏览器打开 <code>https://start.spring.io/</code>，按下面选：</p>
+<table>
+<thead><tr><th style="width:26%">项目</th><th>选择</th></tr></thead>
+<tbody>
+<tr><td>Project</td><td>Maven</td></tr>
+<tr><td>Language</td><td>Java</td></tr>
+<tr><td>Spring Boot</td><td>3.x（最新稳定版）</td></tr>
+<tr><td>Java</td><td>21</td></tr>
+<tr><td>Dependencies</td><td>Spring Web、PostgreSQL Driver、MyBatis Framework、Lombok</td></tr>
+</tbody>
+</table>
+<p>点 GENERATE 下载 zip，解压到 <code>D:\wb\urban-flood-gis\backend</code>，用 IDEA 打开这个目录，等依赖下载完。</p>
+<p><strong>配置数据库连接</strong>（<code>src/main/resources/application.properties</code>）：</p>
+<pre><code>spring.datasource.url=jdbc:postgresql://localhost:5432/floodgis
+spring.datasource.username=postgres
+spring.datasource.password=你设的密码
+spring.datasource.driver-class-name=org.postgresql.Driver
+server.port=8080</code></pre>
+<p>启动主类，控制台看到 "Started ... in x seconds" 即成功。访问 <code>http://localhost:8080</code> 会报 404，正常（还没写接口）。</p>
+
+<h3>6.3 搭前端（Vue3 + Vite）</h3>
+<p><code>frontend</code> 目录已经存在，Vite 脚手架需要空目录，所以先把占位文件删掉或用临时名生成后再合并。最简单的方式：</p>
+<pre><code>cd D:\wb\urban-flood-gis
+npm create vue@latest frontend-tmp</code></pre>
+<p>交互式选项全部选 <strong>No</strong>（先不装路由、不装 Pinia），保持最简。生成后把 <code>frontend-tmp</code> 里的内容移到 <code>frontend</code>：</p>
+<pre><code>xcopy /E /I /Y frontend-tmp frontend
+rmdir /S /Q frontend-tmp
+cd frontend
+npm install
+npm install cesium vite-plugin-cesium
+npm run dev</code></pre>
+<p>浏览器打开 <code>http://localhost:5173</code>，看到 Vue 默认页面即成功。</p>
+
+<p><strong>接入 Cesium</strong>（<code>vite.config.js</code>）：</p>
+<pre><code>import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import cesium from 'vite-plugin-cesium'
+
+export default defineConfig({
+  plugins: [vue(), cesium()]
+})</code></pre>
+
+<p><strong>写第一个三维地球</strong>（<code>src/App.vue</code>）：</p>
+<pre><code>&lt;template&gt;
+  &lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+import { onMounted } from 'vue'
+import * as Cesium from 'cesium'
+
+onMounted(() =&gt; {
+  const viewer = new Cesium.Viewer('cesiumContainer', {
+    baseLayerPicker: false,
+    geocoder: false,
+    animation: false,
+    timeline: false
+  })
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(114.305, 30.593, 200000)
+  })
+})
+&lt;/script&gt;
+
+&lt;style&gt;
+#cesiumContainer { width: 100vw; height: 100vh; }
+&lt;/style&gt;</code></pre>
+<p>保存，浏览器里出现一个飞到武汉上空的三维地球——<strong>第一周就算完成了。</strong></p>
+
+<div class="box good">
+<strong>为什么第一周只做这个：</strong>你要先拿到"能跑起来"的确定感。一个能转的地球，比十个写了一半的模块更有价值——它会让你相信这件事可做。
+</div>
+
+<h2>七、避坑清单</h2>
+
+<table>
+<thead><tr><th style="width:26%">坑</th><th>表现</th><th style="width:38%">解法</th></tr></thead>
+<tbody>
+<tr><td>Git 官网下载龟速</td><td>几十 KB/s，65MB 要下半小时</td><td>换国内镜像：<code>mirrors.huaweicloud.com/git-for-windows/</code>（实测 40MB/s）或 <code>registry.npmmirror.com/-/binary/git-for-windows/</code></td></tr>
+<tr><td>GitHub push/clone 卡住</td><td><code>git push</code> 长时间无响应或 <code>Failed to connect</code></td><td>先 <code>git config --global http.proxy 127.0.0.1:端口</code> 走代理（有的话）；没有就先用 Gitee 私有仓过渡，别在这上面耗时间</td></tr>
+<tr><td>JDK 版本不对</td><td>Spring Boot 启动报 <code>Unsupported class file major version</code></td><td>确认 <code>java -version</code> 是 21，IDEA 里 Project Structure 的 SDK 也改成 21</td></tr>
+<tr><td>PostGIS 装错版本</td><td><code>CREATE EXTENSION postgis</code> 报版本不兼容</td><td>重跑 Stack Builder，选对应 PG 18 的 PostGIS 3.7 Bundle</td></tr>
+<tr><td>扩展建错库</td><td>项目连上但报 <code>type "geometry" does not exist</code></td><td><code>\c floodgis</code> 后再 <code>CREATE EXTENSION postgis</code></td></tr>
+<tr><td>假 Python</td><td><code>python</code> 跳转微软商店，<code>pip</code> 不存在</td><td>PATH 指向 WindowsApps 占位符。卸载商店版 Python + 关闭应用执行别名，装官方版</td></tr>
+<tr><td>工具链副本混淆</td><td>命令能跑，但换个终端就失效</td><td>开发工具内置的 Node/Git 不在系统 PATH。务必自己装一份，用 <code>where node</code> 验证路径</td></tr>
+<tr><td>JAVA_HOME 为空</td><td>IDEA 构建报找不到 JDK / Maven 报错</td><td>新建 JAVA_HOME 指向 JDK 根目录，Path 加 <code>%JAVA_HOME%\bin</code></td></tr>
+<tr><td>端口被占用</td><td>8080 或 5173 启动失败</td><td>换端口（<code>server.port=8081</code>），或 <code>netstat -ano | findstr :8080</code> 找到进程 kill</td></tr>
+<tr><td>Cesium 静态资源 404</td><td>页面白屏，控制台报 Workers 加载失败</td><td>必须用 <code>vite-plugin-cesium</code>，不能手动 copy 资源</td></tr>
+<tr><td>npm 装依赖超时</td><td>卡住或报 ETIMEDOUT</td><td>已配淘宝镜像；还慢就 <code>npm install --registry=https://registry.npmmirror.com</code></td></tr>
+<tr><td>npm 权限报错</td><td>EPERM 或 EACCES</td><td>不要用管理员身份跑 npm，也不要装在 C:\Program Files 下</td></tr>
+<tr><td>路径有中文</td><td>各种诡异的编译/读取失败</td><td>项目、JDK、PostgreSQL、Python 全部装英文路径</td></tr>
+<tr><td>前端跨域</td><td>浏览器报 CORS policy</td><td>后端加 <code>@CrossOrigin</code> 或全局 WebMvcConfigurer 配置</td></tr>
+<tr><td>GeoJSON 坐标不对</td><td>图形飞到海里或偏移几百米</td><td>统一用 EPSG:4326；<code>ST_AsGeoJSON</code> 默认就是 4326，别混用 3857</td></tr>
+</tbody>
+</table>
+
+<h2>八、年前交付物清单</h2>
+
+<p>2 月 10 日之前，你手上必须有这四样东西——它们直接决定年后能不能拿到面试：</p>
+
+<ul class="check">
+<li><strong>一个能点开的在线地址</strong>（哪怕部署在便宜云服务器上，能访问就行）</li>
+<li><strong>一个 GitHub 仓库</strong>，README 里有架构图、技术栈、运行说明、3 张以上截图</li>
+<li><strong>一段 3 分钟演示视频</strong>，从打开页面到拖动时间轴到点击查询，一气呵成</li>
+<li><strong>一段能写进简历的项目描述</strong>（我可以帮你打磨），突出：全链路、技术栈、模型逻辑</li>
+</ul>
+
+<div class="box">
+<strong>最后一句实话：</strong>这套东西看着多，拆到 12 周里，每周只是"装个环境""写个爬虫""调个接口"这种量级。真正难的从来不是技术，是<strong>在兼职一天之后还能坐下来写两小时代码</strong>。你已经等了两年，这 12 周值得认真对待一次。
+</div>
+
+<p class="foot">— 小奕 为王巍琳整理 · 2026.11 —</p>
+
+</div>
+</body>
+</html>

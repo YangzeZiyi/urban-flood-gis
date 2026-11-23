@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostgreSQL 18 + PostGIS 3.7 安装图解教程</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 14px; line-height: 1.75; color: #2c2c2a; background: #f7f7f5;
+  }
+  .page { max-width: 860px; margin: 0 auto; background: #fff; padding: 44px 52px 80px; }
+  h1 { font-size: 25px; font-weight: 600; color: #1a3a5c; margin: 0 0 6px; }
+  .sub { font-size: 13px; color: #888780; margin: 0 0 4px; }
+  .meta { font-size: 12px; color: #b4b2a9; margin-bottom: 26px; }
+  h2 { font-size: 17px; font-weight: 600; color: #fff; background: #1a3a5c; padding: 8px 14px; margin: 38px 0 14px; border-radius: 4px; }
+  h3 { font-size: 15px; font-weight: 600; color: #1a3a5c; margin: 28px 0 8px; padding-left: 10px; border-left: 3px solid #1a3a5c; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12.5px; background: #f1efe8; color: #993c1d; padding: 1px 5px; border-radius: 3px; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 13px 16px; border-radius: 6px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; margin: 10px 0; font-family: "Cascadia Code", Consolas, monospace; }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th { background: #eef1f5; color: #1a3a5c; font-weight: 600; text-align: left; padding: 8px 10px; border: 1px solid #dcdcd6; }
+  td { padding: 8px 10px; border: 1px solid #e5e5e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #fbfbf9; }
+  .box { background: #f4f8fb; border-left: 4px solid #378add; padding: 11px 15px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 13.5px; }
+  .warn { background: #fdf6ec; border-left-color: #ba7517; }
+  .danger { background: #fdf0f0; border-left-color: #a32d2d; }
+  .good { background: #f0f7ee; border-left-color: #3b6d11; }
+  .box strong { color: #1a3a5c; }
+  .danger strong { color: #a32d2d; }
+  .warn strong { color: #854f0b; }
+  .good strong { color: #3b6d11; }
+
+  /* ===== 安装器复刻窗口 ===== */
+  .mock {
+    border: 1px solid #c4c4c0; border-radius: 7px; overflow: hidden;
+    margin: 4px 0 6px; background: #f0f0ee; position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .mock-bar {
+    background: #f6f6f4; border-bottom: 1px solid #dcdcd8;
+    padding: 6px 10px; font-size: 11.5px; color: #5f5e5a;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mock-bar .ico { width: 12px; height: 12px; background: #185fa5; border-radius: 2px; }
+  .mock-bar .x { margin-left: auto; color: #888780; font-size: 12px; }
+  .mock-body { background: #fff; padding: 18px 22px 16px; min-height: 120px; }
+  .mock-h { font-size: 14px; font-weight: 600; color: #1a1a1a; margin: 0 0 6px; }
+  .mock-t { font-size: 12.5px; color: #5f5e5a; margin: 0 0 12px; line-height: 1.6; }
+  .mock-field {
+    border: 1px solid #b4b2a9; background: #fff; border-radius: 2px;
+    padding: 4px 7px; font-size: 12px; color: #2c2c2a; font-family: Consolas, monospace;
+    display: inline-block; min-width: 300px;
+  }
+  .mock-btn-row {
+    display: flex; justify-content: flex-end; gap: 7px;
+    background: #f0f0ee; padding: 9px 14px; border-top: 1px solid #dcdcd8;
+  }
+  .mock-btn {
+    font-size: 12px; padding: 3px 16px; border: 1px solid #a8a8a3;
+    background: #f8f8f6; border-radius: 3px; color: #2c2c2a;
+  }
+  .mock-btn.primary { border-color: #1a3a5c; background: #e8eef5; font-weight: 600; }
+  .cb { font-size: 12.5px; color: #2c2c2a; margin: 5px 0; }
+  .cb input { margin-right: 6px; }
+
+  .hot { outline: 2px solid #e24b4a; outline-offset: 2px; border-radius: 3px; position: relative; }
+  .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 17px; height: 17px; background: #e24b4a; color: #fff;
+    border-radius: 50%; font-size: 11px; font-weight: 600; margin-right: 5px;
+    vertical-align: 2px; font-family: -apple-system, sans-serif;
+  }
+  .caption { font-size: 12.5px; color: #888780; margin: 0 0 26px; }
+  .caption b { color: #a32d2d; }
+  .legend { background: #fdf0f0; border: 1px solid #f0c4c4; border-radius: 6px; padding: 9px 14px; font-size: 12.5px; color: #791f1f; margin: 16px 0 26px; }
+  .foot { font-size: 12px; color: #b4b2a9; margin-top: 46px; text-align: center; }
+  .toc { background: #fafaf7; border: 1px solid #e5e5e0; border-radius: 8px; padding: 14px 22px; margin: 22px 0 26px; }
+  .toc p { font-weight: 600; color: #1a3a5c; margin: 0 0 6px; font-size: 13.5px; }
+  .toc ol { margin: 0; padding-left: 20px; font-size: 13px; }
+  @media print { body{background:#fff;} .page{padding:0;} .mock{break-inside:avoid;} }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>PostgreSQL 18 + PostGIS 3.7 安装图解</h1>
+<p class="sub">逐屏对照 · 关键选项已标注 · 配常见错误处理</p>
+<p class="meta">为 王巍琳 定制 ｜ 2026.11 ｜ 适配 Windows 10</p>
+
+<div class="box good">
+<strong>这份教程怎么用：</strong>下面每一屏都是按真实安装器界面复刻的（不是屏幕截图，但布局和选项文字与原版一致）。<span class="num">1</span> 这样的红框标记表示<strong>这一屏必须动的地方</strong>，其余保持默认、直接点「Next」即可。<br><br>
+<strong>预计耗时：</strong>PostgreSQL 本体约 8 分钟，Stack Builder 装 PostGIS 约 15 分钟（含下载）。
+</div>
+
+<div class="legend">
+<b>本机已确认：</b>当前完全没有 PostgreSQL，5432 端口空闲，D 盘剩余 319GB。<b>安装路径统一用 <code>D:\dev\PostgreSQL\18</code></b>，不占用 C 盘；项目本体在 <code>D:\wb\urban-flood-gis</code>。
+</div>
+
+<div class="toc">
+<p>流程总览</p>
+<ol>
+<li>下载安装包（选哪个版本）</li>
+<li>第 1–9 屏：PostgreSQL 本体安装</li>
+<li>第 10–13 屏：Stack Builder 装 PostGIS</li>
+<li>装完必做：配 PATH + 建库 + 启用扩展</li>
+<li>验证成功（4 条命令）</li>
+<li>装错了怎么彻底重来</li>
+</ol>
+</div>
+
+<h2>一、下载安装包</h2>
+
+<p>打开：<code>https://www.enterprisedb.com/downloads/postgres-postgresql-downloads</code></p>
+
+<p>页面是一个版本表格，找到 <strong>18.7</strong> 那一行，点 Windows 列的 <strong>Download</strong>：</p>
+
+<table>
+<thead><tr><th style="width:24%">你要选的</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>版本 <strong>18.7</strong></td><td>18 发布于 2025 年 9 月，已修到第 7 个补丁版；PostGIS 3.7 官方 Bundle 明确支持 18–19</td></tr>
+<tr><td>系统 <strong>Windows x86-64</strong></td><td>你的机器是 x64，注意别点 ARM64 或 32 位</td></tr>
+<tr><td>文件 <strong>.exe</strong></td><td>约 350MB，就是安装器</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<strong>为什么是 18，不是最新的 19？</strong><br>① PG 19.0 是 2026 年 9–10 月才发的<strong>首个大版本</strong>，PostGIS 3.7 的 Windows Bundle 到 2026 年 11 月 11 日才跟上——太新，容易当小白鼠。<br>② PG 18.7 已修到第 7 个补丁版，稳；PostGIS 官网原文写「Bundle 3.7.0 installers for PostgreSQL <strong>18–19</strong>」，Stack Builder 里一定选得到。<br>③ 也<strong>不用退回 17</strong>：PostGIS 官网说 3.7 的 15–17 版 Bundle 还在 "on the way"（没出），Stack Builder 里能不能选到旧版反而不确定。<br>一句话：18 是「够新 + 够稳 + PostGIS 确定支持」的唯一交集。
+</div>
+
+<h2>二、PostgreSQL 本体安装（第 1–9 屏）</h2>
+
+<h3>第 1 屏 · 欢迎界面</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Welcome to the PostgreSQL Setup Wizard</p>
+    <p class="mock-t">Setup will guide you through the installation of PostgreSQL 18.<br><br>It is recommended that you close all other applications before starting Setup. This will make it possible to update relevant system files without having to reboot your computer.</p>
+    <p class="mock-t">Click Next to continue.</p>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">Cancel</span><span class="mock-btn primary hot">Next &gt;</span></div>
+</div>
+<p class="caption"><b>直接点 Next。</b>没有任何选项要改。</p>
+
+<h3>第 2 屏 · 安装目录 <span class="num">1</span> 第一个关键决策</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Installation Directory</p>
+    <p class="mock-t">Please specify a directory to install the software in.</p>
+    <div class="hot" style="display:inline-block;padding:2px;">
+      <span class="mock-field">D:\dev\PostgreSQL\18</span>
+    </div>
+    <span class="mock-btn" style="margin-left:4px;">Browse...</span>
+    <p class="mock-t" style="margin-top:14px;">Space required: 348MB<br>Space available: 319GB</p>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>必须改。</b>默认是 <code>C:\Program Files\PostgreSQL\18</code>，改成 <code>D:\dev\PostgreSQL\18</code>。<br>
+原因：① C 盘留给系统；② 路径里<strong>绝不能有中文或空格</strong>，否则后面 Python 连库、GDAL 读文件容易报诡异的错。</p>
+
+<div class="box danger">
+<strong>如果你没有 D 盘：</strong>改成 <code>C:\dev\PostgreSQL\18</code> 也行，<strong>只要保证路径纯英文、无空格</strong>。绝对不要用 <code>C:\Program Files</code>（有空格）或桌面、文档这类中文路径。
+</div>
+
+<h3>第 3 屏 · 选择组件 <span class="num">2</span> 全部勾上</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Select Components</p>
+    <p class="mock-t">Select the type of installation you wish to perform.</p>
+    <div class="cb hot" style="display:inline-block;padding:4px 10px 4px 4px;"><input type="checkbox" checked>PostgreSQL Server</div><br>
+    <div class="cb hot" style="display:inline-block;padding:4px 10px 4px 4px;"><input type="checkbox" checked>pgAdmin 4</div><br>
+    <div class="cb hot" style="display:inline-block;padding:4px 10px 4px 4px;"><input type="checkbox" checked>Stack Builder</div><br>
+    <div class="cb hot" style="display:inline-block;padding:4px 10px 4px 4px;"><input type="checkbox" checked>Command Line Tools</div>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>四项全部勾选</b>（默认就是全选，别取消）。<br>
+<span style="color:#a32d2d;">特别提醒：如果漏了 <b>Stack Builder</b>，你就没法装 PostGIS，整个项目做不了。</span></p>
+
+<h3>第 4 屏 · 数据目录</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Data Directory</p>
+    <p class="mock-t">Please select a directory under which to store your data.</p>
+    <span class="mock-field" style="min-width:340px;">D:\dev\PostgreSQL\18\data</span>
+    <span class="mock-btn" style="margin-left:4px;">Browse...</span>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption">默认会跟着上一步自动填好，<strong>保持默认即可</strong>。它会自动建 data 子目录。</p>
+
+<h3>第 5 屏 · 设置密码 <span class="num">3</span> 忘了就只能重装</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Password</p>
+    <p class="mock-t">Please provide a password for the database superuser (postgres).</p>
+    <p style="font-size:12.5px;margin:2px 0;">Password:
+      <span class="mock-field hot" style="min-width:220px;margin-left:6px;">••••••••</span></p>
+    <p style="font-size:12.5px;margin:8px 0 0;">Retype password:
+      <span class="mock-field hot" style="min-width:220px;margin-left:6px;">••••••••</span></p>
+    <div class="cb" style="margin-top:10px;"><input type="checkbox">Show password</div>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>记牢这个密码，它没有找回功能。</b>本地开发用，建议直接设成 <code>postgres</code> 或 <code>123456</code>——不丢人，反而省事，很多教程和示例代码默认就是这个。<br>
+如果怕忘，立刻记在手机备忘录里。</p>
+
+<div class="box danger">
+<strong>忘了密码怎么办：</strong>只能改 <code>pg_hba.conf</code> 临时改成 trust 认证再重置，或者直接重装。新手别折腾，设个简单的就好。
+</div>
+
+<h3>第 6 屏 · 端口 <span class="num">4</span> 不要改</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Port</p>
+    <p class="mock-t">Please select the port number the server should listen on.</p>
+    <p style="font-size:12.5px;">Port: <span class="mock-field hot" style="min-width:90px;margin-left:8px;">5432</span></p>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>保持 5432。</b>这是 PostgreSQL 的标准端口，所有教程、示例连接串默认都用它。改了你以后每处配置都得记得改回来。</p>
+
+<div class="box">
+本机已确认 <b>5432 端口空闲</b>，不会冲突。如果这一步报"端口被占用"，说明你之前装过 PostgreSQL 没卸干净，见文档最后一节「彻底重来」。
+</div>
+
+<h3>第 7 屏 · 区域设置</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Advanced Options</p>
+    <p class="mock-t">Select the locale to be used by the new database cluster.</p>
+    <p style="font-size:12.5px;">Locale: <span class="mock-field" style="min-width:230px;margin-left:8px;">[Default locale] ▾</span></p>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>保持 [Default locale]。</b>不用改，改了可能影响中文字符排序。</p>
+
+<h3>第 8–9 屏 · 确认摘要 → 开始安装</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Pre Installation Summary</p>
+    <p class="mock-t" style="font-family:Consolas,monospace;font-size:11.5px;line-height:1.9;">
+      Installation Directory: &nbsp;D:\dev\PostgreSQL\18<br>
+      Data Directory: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D:\dev\PostgreSQL\18\data<br>
+      Port: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5432<br>
+      Superuser: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;postgres<br>
+      Locale: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Default locale]
+    </p>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>对着上面五项核一遍</b>，确认路径是 D 盘、端口 5432、超级用户 postgres。没问题点 Next，再点 Install，等进度条走完（约 2–3 分钟）。</p>
+
+<h3>第 10 屏 · 完成界面 <span class="num">5</span> 这里决定能不能装 PostGIS</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostgreSQL 18<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Completing the PostgreSQL Setup Wizard</p>
+    <p class="mock-t">PostgreSQL has been installed on your computer.<br>Click Finish to close this wizard.</p>
+    <div class="cb hot" style="display:inline-block;padding:4px 10px 4px 4px;">
+      <input type="checkbox" checked>Launch Stack Builder at exit?
+    </div>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn primary">Finish</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>务必勾选「Launch Stack Builder at exit?」再点 Finish。</b><br>
+<span style="color:#a32d2d;">如果没勾就关掉了，去开始菜单搜「Stack Builder」手动打开，效果一样。</span></p>
+
+<div class="box good">
+到这里 PostgreSQL 本体装好了。但<strong>它还不能存空间数据</strong>——必须再装 PostGIS 扩展。下一步才是重点。
+</div>
+
+<h2>三、Stack Builder 安装 PostGIS（第 11–14 屏）</h2>
+
+<h3>第 11 屏 · 选择要扩展的实例 <span class="num">6</span></h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>Stack Builder 4.2.0<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Welcome to Stack Builder</p>
+    <p class="mock-t">Stack Builder can download and install additional tools and applications for your PostgreSQL installation.</p>
+    <p class="mock-t">Please select the installation you want to add packages to:</p>
+    <div class="hot" style="display:inline-block;padding:3px;">
+      <span class="mock-field" style="min-width:330px;">PostgreSQL 18 on port 5432 ▾</span>
+    </div>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">Proxy...</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>确认下拉框里是「PostgreSQL 18 on port 5432」</b>。如果下拉里没有这一项，说明本体没装成功，回去重装。</p>
+
+<h3>第 12 屏 · 展开 Spatial Extensions 勾 PostGIS <span class="num">7</span> 核心一屏</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>Stack Builder 4.2.0<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Categories</p>
+    <p class="mock-t">Please select the applications you would like to install.</p>
+    <p style="font-size:12.5px;margin:0 0 4px;">▾ <b>Spatial Extensions</b></p>
+    <div class="cb hot" style="display:inline-block;padding:4px 10px 4px 4px;margin-left:22px;">
+      <input type="checkbox" checked>PostGIS 3.7 Bundle for PostgreSQL 18
+    </div>
+    <p style="font-size:12.5px;margin:10px 0 4px;">▸ Database Drivers</p>
+    <p style="font-size:12.5px;margin:0 0 4px;">▸ Web Development</p>
+    <p style="font-size:12.5px;margin:0 0 4px;">▸ Enterprise Tools</p>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption"><b>点开「Spatial Extensions」前面的三角，勾上「PostGIS 3.7 Bundle for PostgreSQL 18」。</b><br>
+<span style="color:#a32d2d;">名字里必须带「for PostgreSQL 18」——带 17 或 19 的都是错的，装了会失败。</span></p>
+
+<div class="box danger">
+<strong>这是整个安装最容易错的一步。</strong>PostGIS 版本必须和 PostgreSQL 主版本匹配。你是 PG 18，就必须选 3.7 Bundle for <strong>PostgreSQL 18</strong>。选错了，后面执行 <code>CREATE EXTENSION postgis</code> 会直接报版本不兼容。
+</div>
+
+<h3>第 13 屏 · 下载</h3>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>Stack Builder 4.2.0<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Download</p>
+    <p class="mock-t">The following packages will be downloaded:</p>
+    <p style="font-size:12px;font-family:Consolas,monospace;margin:4px 0 12px;">postgis-bundle-pg18-3.7.0x64.zip</p>
+    <p style="font-size:12.5px;">Download directory:</p>
+    <span class="mock-field" style="min-width:320px;">C:\Users\Administrator\Downloads</span>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+<p class="caption">下载目录默认即可。<b>点 Next 后开始下载，约 40MB。</b>国内网络可能慢，耐心等，别点取消。</p>
+
+<div class="box warn">
+<strong>如果卡住不动超过 5 分钟：</strong>可能是镜像问题。取消后重开 Stack Builder，在欢迎页点「Proxy...」不用填，直接下一步有时能换镜像。或者挂了梯子再试。
+</div>
+
+<h3>第 14 屏 · 安装 PostGIS</h3>
+
+<p>下载完成后会自动弹出 PostGIS 的安装向导，界面和 PostgreSQL 本体类似：</p>
+
+<ul>
+<li><strong>安装路径必须和 PostgreSQL 一致</strong> —— 会自动填成 <code>D:\dev\PostgreSQL\18</code>，<strong>不要改</strong>。</li>
+<li>后面几屏一路 Next → Install → Finish。</li>
+<li>出现「Create spatial database」的询问时，<strong>可以跳过</strong>（我们后面手动建）。</li>
+</ul>
+
+<div class="mock">
+  <div class="mock-bar"><span class="ico"></span>PostGIS 3.7 Bundle<span class="x">✕</span></div>
+  <div class="mock-body">
+    <p class="mock-h">Installation Directory</p>
+    <p class="mock-t">Please specify a directory to install the software in.</p>
+    <div class="hot" style="display:inline-block;padding:2px;">
+      <span class="mock-field" style="min-width:300px;">D:\dev\PostgreSQL\18</span>
+    </div>
+    <p class="mock-t" style="margin-top:12px;color:#a32d2d;">↑ 必须和 PostgreSQL 主目录完全一致，不要多点一层或多建文件夹</p>
+  </div>
+  <div class="mock-btn-row"><span class="mock-btn">&lt; Back</span><span class="mock-btn primary">Next &gt;</span><span class="mock-btn">Cancel</span></div>
+</div>
+
+<h2>四、装完必做三件事</h2>
+
+<h3>1. 把 bin 目录加进 PATH</h3>
+
+<p>不加的话，你在任意目录敲 <code>psql</code> 都会报"不是内部或外部命令"。</p>
+
+<p>Win+R → 输入 <code>sysdm.cpl</code> → 高级 → 环境变量 → 在下半部分<strong>系统变量</strong>里找到 <code>Path</code> → 编辑 → 新建：</p>
+
+<pre><code>D:\dev\PostgreSQL\18\bin</code></pre>
+
+<p>确定保存，然后<strong>关掉所有终端窗口重新开</strong>。</p>
+
+<h3>2. 建项目数据库</h3>
+
+<p>新开 CMD，执行（会提示输入密码，就是你第 5 屏设的那个）：</p>
+
+<pre><code>psql -U postgres</code></pre>
+
+<p>进入 psql 后，逐行执行：</p>
+
+<pre><code>CREATE DATABASE floodgis;
+\c floodgis
+CREATE EXTENSION postgis;
+SELECT postgis_version();
+\q</code></pre>
+
+<div class="box danger">
+<strong>最容易犯的错：忘了 <code>\c floodgis</code>。</strong><br>
+<code>CREATE EXTENSION postgis</code> 是<strong>装在某一个具体的数据库里</strong>的，不是装在 PostgreSQL 全局。如果你在默认的 <code>postgres</code> 库里建，项目连 <code>floodgis</code> 时会报 <code>type "geometry" does not exist</code>。<br>
+<strong>一定要先 <code>\c floodgis</code> 切过去，再建扩展。</strong>
+</div>
+
+<h3>3. 给项目建个专用连接（可选但推荐）</h3>
+
+<p>暂时用 postgres 超级用户没问题。等后端跑通了，再建专用账号更规范：</p>
+
+<pre><code>CREATE USER gisuser WITH PASSWORD 'gis123456';
+GRANT ALL PRIVILEGES ON DATABASE floodgis TO gisuser;
+\c floodgis
+GRANT ALL ON SCHEMA public TO gisuser;</code></pre>
+
+<h2>五、验证成功（4 条命令）</h2>
+
+<p>新开 CMD，逐条跑，全部正常才算装好：</p>
+
+<table>
+<thead><tr><th style="width:44%">命令</th><th>期望结果</th></tr></thead>
+<tbody>
+<tr><td><code>psql --version</code></td><td><code>psql (PostgreSQL) 18.x</code></td></tr>
+<tr><td><code>psql -U postgres -c "SELECT version();"</code></td><td>输出 <code>PostgreSQL 18.x on x86_64-windows...</code></td></tr>
+<tr><td><code>psql -U postgres -d floodgis -c "SELECT postgis_version();"</code></td><td><code>3.5 USE_GEOS=1 USE_PROJ=1 USE_STATS=1</code></td></tr>
+<tr><td><code>psql -U postgres -d floodgis -c "SELECT ST_AsText(ST_Point(114.3,30.5));"</code></td><td><code>POINT(114.3 30.5)</code></td></tr>
+</tbody>
+</table>
+
+<div class="box good">
+<strong>第 4 条是关键。</strong>它能输出 <code>POINT(114.3 30.5)</code>，说明 PostGIS 的空间函数真的能用了——不是只装了个壳。到这一步，你的空间数据库就彻底就绪了。
+</div>
+
+<h2>六、装错了怎么彻底重来</h2>
+
+<p>如果中途搞乱了（比如 PostGIS 版本选错、路径选错、密码忘了），<strong>别在残骸上修补</strong>，彻底卸干净重装更快：</p>
+
+<ol>
+<li>控制面板 → 卸载程序 → 卸载 <strong>PostGIS 3.7 Bundle</strong>。</li>
+<li>再卸载 <strong>PostgreSQL 18</strong>。</li>
+<li>手动删掉残留目录：<code>D:\dev\PostgreSQL</code>（整个文件夹）。</li>
+<li>删掉数据目录（如果建在别处）：<code>D:\dev\PostgreSQL\18\data</code>。</li>
+<li><strong>检查服务是否残留</strong>：Win+R → <code>services.msc</code> → 找 <code>postgresql-x64-18</code>，如果还在，右键停止后删除（用管理员 CMD 执行 <code>sc delete postgresql-x64-18</code>）。</li>
+<li>重启电脑，然后从头按本文档再装一遍。</li>
+</ol>
+
+<div class="box">
+<strong>判断要不要重装：</strong>如果 <code>CREATE EXTENSION postgis</code> 报「版本不兼容」或「extension "postgis" is not available」，基本就是 PostGIS Bundle 装错了版本或装错了路径——重装一次比调试快得多。
+</div>
+
+<h2>七、装完之后</h2>
+
+<p>到这里你的环境就该有：<strong>JDK 21 ✅ / PostgreSQL 18 ✅ / PostGIS 3.7 ✅</strong>。</p>
+
+<p>接下来按开发方案文档的顺序，还差：Python 3.13（当前是假的，必须重装）→ Git → Node.js → VS Code / IDEA。</p>
+
+<div class="box good">
+<strong>装完这个，最硬的一块骨头就啃下来了。</strong>PostgreSQL + PostGIS 是这套技术栈里最麻烦的一环，它过了，剩下的都是"装个软件然后一路 Next"。
+</div>
+
+<p class="foot">— 小奕 为王巍琳整理 · 2026.11 —</p>
+
+</div>
+</body>
+</html>
