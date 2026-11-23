@@ -574,6 +574,32 @@ def main() -> None:
               f"{rgba.shape[1]}x{rgba.shape[0]}  "
               f"{OUT_OVERLAY.stat().st_size / 1e6:.1f} MB")
         print(f"  贴图范围（西, 南, 东, 北）= {bbox}")
+
+        # ---- 元数据 sidecar ----
+        # 前端不该把 bbox、分级阈值这些数字再手抄一遍：
+        # 以后你改了权重或分级，前端会自动跟着变；手抄则一定会有一次忘了改，
+        # 到时候"图例说 0.79 是极高、地图上 0.72 就红了"，排查起来极痛苦。
+        # 这就是"单一数据源（single source of truth）"。
+        sidecar = {
+            "file": OUT_OVERLAY.name,
+            "bbox_wgs84": [round(float(v), 6) for v in bbox],
+            "bbox_order": "west, south, east, north",
+            "size_px": [int(rgba.shape[1]), int(rgba.shape[0])],
+            "cell_m": RES,
+            "crs": "EPSG:4547 -> 贴图按 WGS84 经纬度矩形铺设",
+            "levels": [
+                {"name": n, "lo": round(float(lo), 4), "hi": round(float(hi), 4), "color": c}
+                for lo, hi, n, c in levels
+            ],
+            "weights": {k: float(v) for k, v in WEIGHTS.items()},
+            "sign": {k: int(v) for k, v in SIGN.items()},
+            "land_km2": round(float(land.sum() * CELL_KM2), 1),
+            "city_km2": round(float(valid.sum() * CELL_KM2), 1),
+        }
+        out_json = OVERLAY_DIR / "wuhan_flood_index.json"
+        out_json.write_text(json.dumps(sidecar, ensure_ascii=False, indent=2),
+                            encoding="utf-8")
+        print(f"  已出元数据: {out_json.relative_to(PROJECT_DIR)}")
     except Exception as e:
         print(f"  [贴图失败] {e}")
 

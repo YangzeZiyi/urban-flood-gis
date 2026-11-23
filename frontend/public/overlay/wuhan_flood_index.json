@@ -1,0 +1,62 @@
+{
+  "file": "wuhan_flood_index.png",
+  "bbox_wgs84": [
+    113.702281,
+    29.969132,
+    115.082378,
+    31.36126
+  ],
+  "bbox_order": "west, south, east, north",
+  "size_px": [
+    1110,
+    1291
+  ],
+  "cell_m": 30.0,
+  "crs": "EPSG:4547 -> 贴图按 WGS84 经纬度矩形铺设",
+  "levels": [
+    {
+      "name": "低",
+      "lo": 0.0,
+      "hi": 0.2515,
+      "color": "#2f81f7"
+    },
+    {
+      "name": "较低",
+      "lo": 0.2515,
+      "hi": 0.388,
+      "color": "#3fb950"
+    },
+    {
+      "name": "中",
+      "lo": 0.388,
+      "hi": 0.5998,
+      "color": "#d29922"
+    },
+    {
+      "name": "高",
+      "lo": 0.5998,
+      "hi": 0.7272,
+      "color": "#f0883e"
+    },
+    {
+      "name": "极高",
+      "lo": 0.7272,
+      "hi": 1.001,
+      "color": "#f85149"
+    }
+  ],
+  "weights": {
+    "elev": 0.2,
+    "slope": 0.15,
+    "fill": 0.15,
+    "acc": 0.5
+  },
+  "sign": {
+    "elev": -1,
+    "slope": -1,
+    "fill": 1,
+    "acc": 1
+  },
+  "land_km2": 7245.7,
+  "city_km2": 8572.7
+}

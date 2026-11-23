@@ -22,6 +22,26 @@ let viewer = null
 // 把相机飞到武汉（经度, 纬度, 高度米）
 const HOME = { lon: 114.305, lat: 30.593, height: 26000 }
 
+// ---------------- 贴图相关状态 ----------------
+// 注意分工：overlayLayer 是 Cesium 对象，不能塞进 ref（Vue 代理会拖慢它），
+// 而图例内容要给模板用，必须放进 ref 才会驱动界面更新
+let overlayLayer = null
+const legend = ref([])        // [{ name, lo, hi, color }]，由 JSON 提供
+const legendFoot = ref('')    // 图例底部那行小字
+const overlayOn = ref(true)   // 图例上的勾选框
+
+// 因子英文键 → 中文名，只为了图例底部那行字好读
+const CN = { elev: '高程', slope: '坡度', fill: '填洼', acc: '汇流' }
+
+/**
+ * 勾选框变化时调用：显隐整张贴图。
+ * 为什么不用 computed 自动同步？因为 overlayLayer 是普通变量，
+ * Vue 看不见它的变化，只能靠事件手动推一下。
+ */
+function toggleOverlay() {
+  if (overlayLayer) overlayLayer.show = overlayOn.value
+}
+
 // ---------------- 天地图 key ----------------
 // import.meta.env 是 Vite 注入环境变量的方式，值来自 frontend/.env
 // 只有 VITE_ 开头的变量才会被注入，避免把服务器密钥误打到前端
@@ -92,6 +112,75 @@ onMounted(async () => {
     infoBox: false,          // 点击要素弹出的信息面板（我们用自定义的）
     selectionIndicator: false,
   })
+
+  // ---------------- 叠加易涝指数贴图（M3 的成果） ----------------
+  // 这是"从数据到屏幕"的最后一公里：一张 PNG + 一个经纬度矩形，就这么多。
+  //
+  // 为什么不用 GeoJSON 多边形？
+  //   指数有 2268 万个像元，转成多边形就是几十万个矩形，浏览器必卡死。
+  //   用贴图，GPU 只画一个四边形，代价几乎为零。
+  //
+  // 三点必须知道：
+  //   1. 影像图层按 add 的先后叠，index 0 在最底下。
+  //      所以这里的顺序是：底图(0) → 指数贴图(1) → 注记(2)。
+  //      注记层一定放在最后 add，否则地名会被这张半透明图糊住。
+  //   2. 贴图是"矩形 + 整幅图"一次铺满，缩放超过约 1:10 万会开始糊
+  //      （原图只有 1110x1291 像素）。要看清得切瓦片，那是后面的事。
+  //   3. bbox 和分级阈值全部从 JSON 读，前端一个数字都不手抄——
+  //      改脚本，前端自动跟着变。这叫单一数据源（single source of truth）。
+  try {
+    const metaResp = await fetch('/overlay/wuhan_flood_index.json')
+    if (!metaResp.ok) throw new Error(`HTTP ${metaResp.status}`)
+    const meta = await metaResp.json()
+
+    // bbox 的顺序是（西, 南, 东, 北），单位是度，和 fromDegrees 的参数完全对应。
+    // 这个顺序值得记一下：很多数据集的 bbox 写成 [minX, minY, maxX, maxY]，
+    // 其实是同一套；但如果谁给了 [西, 东, 南, 北]，图会跑到海里，
+    // 或者直接报 "south must be less than north"——报错算幸运，静默错位才要命。
+    const [w, s, e, n] = meta.bbox_wgs84
+    const rectangle = Cesium.Rectangle.fromDegrees(w, s, e, n)
+
+    const provider = new Cesium.SingleTileImageryProvider({
+      url: `/overlay/${meta.file}`,
+      rectangle,
+      // 这两个参数在 1.147 里**是必填的**，虽然官方文档标着"可选"。
+      // 源码里是 Check.typeOf.number("options.tileWidth", ...)，不传就抛
+      // DeveloperError: Expected options.tileWidth to be typeof number。
+      // 而且必须和 PNG 的真实像素尺寸一致，否则贴图会被拉变形。
+      // 我们的 JSON 里正好记了 size_px，直接取用，不再手抄。
+      tileWidth: meta.size_px[0],
+      tileHeight: meta.size_px[1],
+    })
+
+    overlayLayer = viewer.imageryLayers.addImageryProvider(provider)
+
+    // ================================================================
+    // TODO ★ 贴图的不透明度，填 0~1 之间的数 ★
+    //
+    //   1.00 —— 完全按 PNG 自己的透明度铺。红色区域会盖住底图，
+    //           看不出"这个高风险区到底压在江滩上还是堤后"。
+    //   0.85 —— 还能看清红色，同时透出底图的江、路、绿地。
+    //   0.60 —— 底图很清楚，但红色变淡，远处几乎看不出来。
+    //
+    //   这不是语法题，是取舍：你到底想让观众先看风险，还是先看地形？
+    //   想清楚了再填，填完在页面上滚轮放大缩小感受一下。
+    // ================================================================
+    overlayLayer.alpha = 1.0        // <- 改这一行
+
+    // 图例内容也从 JSON 来
+    legend.value = meta.levels
+    legendFoot.value =
+      `陆地 ${meta.land_km2.toLocaleString()} km² · ` +
+      `权重 ` +
+      Object.entries(meta.weights)
+        .map(([k, v]) => `${CN[k] ?? k}${v.toFixed(2)}`)
+        .join(' / ')
+
+    console.log(`[贴图] ${meta.file} 已铺在 ${rectangle.west} ~ ${rectangle.east}`, meta.bbox_wgs84)
+  } catch (err) {
+    // 贴图失败不该让整页白屏：底图、区界、易涝区都还能用，只是少了指数
+    console.error('[贴图] 加载失败，检查 frontend/public/overlay/ 下的 png 和 json', err)
+  }
 
   // ---------------- 叠加注记层 ----------------
   // 只有影像没有地名，看不出这里是哪儿。再叠一层"影像注记"，
@@ -281,14 +370,118 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- ref="container" 把这个 div 的 DOM 交给上面的 container 变量 -->
-  <div ref="container" class="cesium-container"></div>
+  <div ref="container" class="cesium-container">
+    <!--
+      图例浮层：和 App.vue 里那块状态面板同一套配色变量（--panel 等）。
+      为什么要放在这个组件里而不是 App.vue？
+      因为它只服务于"贴图"这一件事，跟着组件走，删掉组件图例自然消失，不会留孤儿。
+    -->
+    <aside v-if="legend.length" class="legend">
+      <div class="legend-head">
+        <span>易涝风险指数</span>
+        <label class="switch">
+          <input v-model="overlayOn" type="checkbox" @change="toggleOverlay" />
+          <span>贴图</span>
+        </label>
+      </div>
+
+      <ul>
+        <li v-for="lv in legend" :key="lv.name">
+          <i :style="{ background: lv.color }"></i>
+          <span>{{ lv.name }}</span>
+          <b>{{ lv.lo.toFixed(2) }}~{{ lv.hi > 1 ? '1.00' : lv.hi.toFixed(2) }}</b>
+        </li>
+      </ul>
+
+      <p class="legend-foot">{{ legendFoot }}</p>
+    </aside>
+  </div>
 </template>
 
 <style scoped>
 .cesium-container {
+  position: relative;   /* 给图例做定位基准 */
   width: 100%;
   height: 100%;
   background: #000;
+  overflow: hidden;
+}
+
+/* ---------- 图例 ---------- */
+.legend {
+  position: absolute;
+  right: 16px;
+  bottom: 34px;          /* 让开 Cesium 左下角的版权条 */
+  z-index: 20;           /* 必须压过 canvas */
+  width: 208px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+  color: var(--text);
+  user-select: none;
+}
+
+.legend-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.switch input {
+  accent-color: var(--accent);
+}
+
+.legend ul {
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+/* 色块 */
+.legend li i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.legend li span {
+  flex: 1;
+}
+
+.legend li b {
+  font-weight: 400;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-foot {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-dim);
 }
 
 /* Cesium 自带的版权信息默认在左下角，字号偏小，这里统一调一下 */
