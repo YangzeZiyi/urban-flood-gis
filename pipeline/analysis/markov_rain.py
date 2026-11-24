@@ -119,8 +119,11 @@ def count_transitions(states: np.ndarray) -> np.ndarray:
     counts = np.zeros((N, N), dtype=np.int64)
 
     # ---- 在这里写你的两行 ----
-    # TODO ★★★
-
+    # 注意：t 是"第几天"（0..n-2），states[t] 才是"哪一态"。
+    # 原写法 counts[i][j] 把这两个概念混在了一起：i / j 从没被赋值过，
+    # 而且就算赋了值，用"第几天"当下标去累加，统计的也不是转移次数。
+    for t in range(len(states) - 1):
+        counts[states[t], states[t + 1]] += 1
     return counts
 
 
@@ -139,8 +142,12 @@ def normalize_rows(counts: np.ndarray) -> np.ndarray:
     P = np.zeros((N, N), dtype=np.float64)
 
     # ---- 在这里写你的归一化 ----
-    # TODO ★★★
-
+    # 原写法 P[i][j] = ... 缺循环：5×5 = 25 个格子，不写循环只能算一个格子，
+    # 而且 i / j 同样没定义。这里直接用 numpy 的按行广播，一次算完 25 个。
+    row = counts.sum(axis=1, keepdims=True).astype(np.float64)
+    # where=row > 0：万一某个状态在序列里从没出现过，那一行保留 0，
+    # 而不是让 0/0 变成 NaN —— NaN 会顺着后面的矩阵乘方污染整条链。
+    P = np.divide(counts, row, out=np.zeros((N, N), dtype=np.float64), where=row > 0)
     return P
 
 
