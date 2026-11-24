@@ -61,5 +61,7 @@ application-local.properties
 # ===== 含密码的配置（只推 .example 模板，真实配置留本地）=====
 backend/src/main/resources/application.yml
 
-# ===== 个人简历（含电话/邮箱等隐私，不放公开仓库）=====
-docs/*简历*.docx
+# ===== 含个人信息的文档，不进公开仓库 =====
+docs/*.docx
+# 开发方案/排期属于个人规划，只留本地
+docs/方案/
