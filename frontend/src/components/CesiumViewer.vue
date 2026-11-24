@@ -38,15 +38,24 @@ let noteLayer = null          // 影像注记层（地名），必须永远压�
 let overlayBeforeTimeline = true
 
 // ---------------- 动态风险时间轴（M6） ----------------
-// 7 帧不是"每次换一个 url"，而是 7 个图层同时建好、只切换 show。
-// 换 url 要等网络、要重建 provider，拖动滑块时必然闪白；
-// 7 个图层常驻显存（每帧约 11 MB），换来的是拖动零延迟——这点内存很值。
+// 2020 年汛期（5/1~9/30）是 153 帧，不能再像 7 帧那样"一次全建好只切 show"：
+//   - 每帧贴图 1656×1671 解码后约 11 MB，153 张就是 1.6 GB 显存，
+//     浏览器会直接丢掉 WebGL 上下文，页面变成一片灰；
+//   - 首屏还要先下 36 MB，用户打开页面第一秒就是白屏。
+// 所以改成"按需建层 + 最近窗口缓存"：只留当前帧前后各 1 帧（最多 3 个图层，
+// 约 33 MB），滑到哪建到哪。代价是快速拖动时偶尔要等一次贴图上传，
+// 换来的是 153 帧和 7 帧一样能开得起来。
 const timeline = ref(null)      // manifest，null = 还没加载完或加载失败
 const frameIdx = ref(0)         // 当前帧下标
 const playing = ref(false)      // 是否在自动播放
 const timelineOn = ref(false)   // 时间轴模式开关（打开时静态贴图让位）
-let riskLayers = []             // Cesium.ImageryLayer[]，与 frames 一一对应
+const frameLoading = ref(false) // 当前帧贴图还在路上，界面上给个"载入中"
+let frameCache = new Map()      // 下标 -> Cesium.ImageryLayer，只留最近几帧
+let slideTimer = null           // 拖动防抖的 setTimeout 句柄
 let playTimer = null            // setInterval 句柄，退出/卸载时必须清
+
+const CACHE_RADIUS = 1          // 当前帧前后各留几帧（1 => 最多 3 个图层）
+const PLAY_INTERVAL = 700       // 自动播放每帧毫秒数。153 帧 × 0.7 s ≈ 1.8 分钟一轮
 
 // 时间轴模式下把图例底部那句话换掉：它解释的是"为什么 7 张图的颜色能直接比大小"
 const TIMELINE_FOOT = '动态风险与静态图同一套分级阈值，红区面积可直接跨日期比较'
@@ -140,21 +149,99 @@ function toggleOverlay(e) {
   if (overlayLayer) overlayLayer.show = overlayOn.value
 }
 
-// ---------------- 时间轴：切帧 / 播放 / 开关 ----------------
+// ---------------- 时间轴：按需建层 / 切帧 / 播放 / 开关 ----------------
 /**
- * 只显示第 i 帧（其余 6 帧藏起来）。
+ * 拿到第 i 帧的图层，没有就现建一个。
  *
- * 为什么不 remove/add 图层？Cesium 删图层会销毁贴图，下次 add 又要重新
- * 上传 11 MB 到 GPU，拖动滑块时屏幕上会闪一下白。
- * 7 个图层全程挂在 imageryLayers 里，只是 show 开关不同——切帧是零成本的。
+ * 为什么清缓存时用 remove(layer, true) 而不是留着？
+ *   第二个参数 true = 连贴图一起销毁。不传的话图层对象摘掉了，
+ *   但 GPU 里那 11 MB 纹理还在，拖完 153 帧等于把整个汛期都留在显存里，
+ *   白做懒加载。
  */
-function applyFrame(i) {
-  if (!riskLayers.length) return
-  const n = riskLayers.length
-  frameIdx.value = Math.max(0, Math.min(n - 1, i))
-  riskLayers.forEach((l, k) => {
-    l.show = timelineOn.value && k === frameIdx.value
+function ensureLayer(i) {
+  const hit = frameCache.get(i)
+  if (hit) return hit
+
+  const tl = timeline.value
+  const [tw, ts, te, tn] = tl.bbox_wgs84
+  const f = tl.frames[i]
+  const provider = new Cesium.SingleTileImageryProvider({
+    url: `/risk/${f.img}`,
+    rectangle: Cesium.Rectangle.fromDegrees(tw, ts, te, tn),
+    // tileWidth/tileHeight 必须等于贴图真实像素，否则被拉伸变形。
+    // 这两个值来自 manifest，不在这里写死——改了导出分辨率前端自动跟着变。
+    tileWidth: tl.width,
+    tileHeight: tl.height,
   })
+  const layer = viewer.imageryLayers.addImageryProvider(provider)
+  layer.alpha = 0.85         // 和静态贴图同一个不透明度，切模式时观感才一致
+  layer.show = false
+  frameCache.set(i, layer)
+
+  // 新 add 的影像层一定压在注记层之上，必须再把注记抬回去，
+  // 否则建一帧糊一次地名。7 帧时代这一步只在全部建完时做一次，现在每帧都要做。
+  if (noteLayer) viewer.imageryLayers.raiseToTop(noteLayer)
+  return layer
+}
+
+/** 丢掉离当前帧超出一个窗口的图层，把显存还回去 */
+function evict(keepIdx) {
+  for (const [i, layer] of frameCache) {
+    if (Math.abs(i - keepIdx) <= CACHE_RADIUS) continue
+    viewer.imageryLayers.remove(layer, true)
+    frameCache.delete(i)
+  }
+}
+
+/**
+ * 真正把第 i 帧显示出来：建层 → 只 show 它 → 清远处 → 预取邻居。
+ *
+ * 为什么只预取不解码成图层？
+ *   new Image() 只把文件下进 HTTP 缓存，不占显存；下一格要显示时
+ *   SingleTileImageryProvider 直接命中缓存，省掉一次网络往返。
+ *   要是预取也建图层，就等于变相把懒加载又写回了全量加载。
+ */
+function showFrame(i) {
+  if (!timeline.value) return
+  const n = timeline.value.frames.length
+  frameIdx.value = Math.max(0, Math.min(n - 1, i))
+  const idx = frameIdx.value
+
+  const layer = ensureLayer(idx)
+  for (const [k, l] of frameCache) l.show = timelineOn.value && k === idx
+  layer.show = timelineOn.value
+  evict(idx)
+
+  // 贴图还在解码时给个提示。
+  //
+  // 怎么判断"贴图就绪"？不能问 Cesium：
+  //   1.147 的 ImageryProvider 把 ready / readyPromise 全拆了
+  //   （实测 `'ready' in provider === false`，两种都是 undefined），
+  //   改成只能通过异步的 fromUrl 构造。我们这里是同步构造，
+  //   拿不到任何就绪信号，写 provider.ready 恒为 undefined，
+  //   界面上就会永远挂着"载入中…"——图其实早画出来了，提示在骗人。
+  //
+  // 所以自己 load 一次同一张图来判断：浏览器按 URL 去重，
+  // Cesium 内部发的也是这个 URL，不会多下载一份，只是多一个解码回调。
+  // 用 idx 做令牌：快速拖动时先后建了好几帧，只有最后落到的那一帧
+  // 才有资格关提示，否则会被先完成的旧帧提前清掉。
+  const probe = new Image()
+  probe.onload = () => { if (frameIdx.value === idx) frameLoading.value = false }
+  probe.onerror = () => {
+    // 图挂了也别把提示挂天上，否则用户以为一直在加载
+    if (frameIdx.value === idx) frameLoading.value = false
+    console.warn(`[时间轴] ${timeline.value.frames[idx].img} 加载失败`)
+  }
+  probe.src = `/risk/${timeline.value.frames[idx].img}`
+  frameLoading.value = !probe.complete
+
+  for (const d of [-1, 1]) {
+    const j = idx + d
+    if (j >= 0 && j < n && !frameCache.has(j)) {
+      const im = new Image()
+      im.src = `/risk/${timeline.value.frames[j].img}`
+    }
+  }
 }
 
 /** 停掉自动播放。播放器、退出时间轴、组件卸载三个地方都要调它 */
@@ -166,17 +253,17 @@ function stopPlay() {
   }
 }
 
-/** ▶ / ⏸：播放时每秒走一帧，走到最后回到第一帧循环，方便反复看雨怎么蔓延 */
+/** ▶ / ⏸：每帧 700 ms，走到最后回到第一帧循环，方便反复看雨怎么蔓延 */
 function togglePlay() {
   if (playing.value) {
     stopPlay()
     return
   }
-  if (!riskLayers.length) return
+  if (!timeline.value) return
   playing.value = true
   playTimer = setInterval(() => {
-    applyFrame((frameIdx.value + 1) % riskLayers.length)
-  }, 1000)
+    showFrame((frameIdx.value + 1) % timeline.value.frames.length)
+  }, PLAY_INTERVAL)
 }
 
 /**
@@ -199,10 +286,14 @@ function toggleTimeline() {
     overlayOn.value = false
     if (overlayLayer) overlayLayer.show = false
     legendFoot.value = TIMELINE_FOOT
-    applyFrame(0)                 // 总是从第一天开始，避免停在上一轮的帧号
+    showFrame(0)                  // 总是从第一天开始，避免停在上一轮的帧号
   } else {
     stopPlay()
-    riskLayers.forEach((l) => { l.show = false })
+    // 拖动防抖的定时器也要清：退出时它还可能再补建一帧，
+    // 那一帧建出来就是 show=false 的孤儿，白占显存
+    if (slideTimer) { clearTimeout(slideTimer); slideTimer = null }
+    for (const [, l] of frameCache) l.show = false
+    frameLoading.value = false
     // 还回"进入时间轴之前"的状态，而不是写死 true：
     // 用户要是本来就不想看贴图（只想看底图），退出后不该被强行打开
     overlayOn.value = overlayBeforeTimeline
@@ -212,13 +303,23 @@ function toggleTimeline() {
 }
 
 /**
- * 拖动滑块。用 input 而不是 change：change 要等松手才触发，
- * 拖的时候图一动不动，完全没有"回放"的感觉。
- * 拖动时如果正在播放，先暂停——否则手指和定时器抢着改帧号，图会跳着走。
+ * 拖动滑块。
+ *
+ * 153 帧的滑块拖一次会连发几十个 input 事件，每个都建图层 = 几十次 11 MB
+ * 贴图上传，主线程直接卡死。所以：帧号立刻改（日期和统计文字必须跟手），
+ * 真正的建层往后推 70 ms，手停下来只执行最后一次。
+ * 70 ms 是人感觉不出延迟、又足以把一整段拖动合并成一次的门槛。
  */
 function onSlide(e) {
   if (playing.value) stopPlay()
-  applyFrame(Number(e.target.value))
+  if (!timeline.value) return
+  const n = timeline.value.frames.length
+  frameIdx.value = Math.max(0, Math.min(n - 1, Number(e.target.value)))
+  if (slideTimer) clearTimeout(slideTimer)
+  slideTimer = setTimeout(() => {
+    slideTimer = null
+    showFrame(frameIdx.value)
+  }, 70)
 }
 
 /** 当前帧对象。没有 manifest 时返回 null，模板里全部 v-if 兜住 */
@@ -392,48 +493,33 @@ onMounted(async () => {
   noteLayer = viewer.imageryLayers.addImageryProvider(tiandituLayer('cia', 'cia_w'))
 
   // ---------------- 加载动态风险时间轴（M6） ----------------
-  // 数据来源是 risk_dynamic.py 的最后一步：它把 7 张 png + manifest 复制到
+  // 数据来源是 risk_dynamic.py 的最后一步：它把 153 张 webp + manifest 复制到
   // frontend/public/risk/，所以这里的路径就是 /risk/xxx（public 是网站根目录）。
   //
+  // 这里只做一件事：把 manifest 拿到手。**不建任何图层**——
+  // 建层推迟到用户第一次点"时间轴"（见 showFrame），这样页面打开的第一个
+  // 一秒钟不需要为时间轴付任何代价。
+  //
   // 三层都要守住：
-  //   1. 失败不能影响静态图：这段包在 try 里，axios 挂了页面照样能用
-  //   2. 7 个图层一次建完，默认全 show=false，等用户点"时间轴"再显示
-  //   3. 建完必须把注记层顶回最上面——否则地名会被半透明贴图糊住
+  //   1. 失败不能影响静态图：这段包在 try 里，manifest 挂了页面照样能用
+  //   2. 不预建图层，避免 153 帧把显存吃穿
+  //   3. 拿到 manifest 后仍要抬一次注记层，为后面动态建层定好基线
   try {
     const tlResp = await fetch('/risk/risk_timeline.json')
     if (!tlResp.ok) throw new Error(`HTTP ${tlResp.status}`)
     const tl = await tlResp.json()
 
-    // bbox 和静态贴图、点击查询是同一个（EPSG:4326 等经纬度网格），
-    // 所以两张图能严丝合缝地叠在一起，切模式时不会跳位
-    const [tw, ts, te, tn] = tl.bbox_wgs84
-    const tlRect = Cesium.Rectangle.fromDegrees(tw, ts, te, tn)
-
-    // 先把 7 张 PNG 塞进浏览器缓存。不预加载的话，第一次拖到底部会看到
-    // 一块空白——图层已经 show 了，但贴图还在下载路上。
-    tl.frames.forEach((f) => {
-      const im = new Image()
-      im.src = `/risk/${f.png}`
-    })
-
-    riskLayers = tl.frames.map((f) => {
-      const p = new Cesium.SingleTileImageryProvider({
-        url: `/risk/${f.png}`,
-        rectangle: tlRect,
-        tileWidth: tl.width,     // 1.147 必填，且必须等于 PNG 真实像素，否则拉伸变形
-        tileHeight: tl.height,
-      })
-      const layer = viewer.imageryLayers.addImageryProvider(p)
-      layer.alpha = 0.85         // 和静态贴图同一个不透明度，切模式时观感才一致
-      layer.show = false         // 默认全隐藏，点"时间轴"才出第一帧
-      return layer
-    })
-
     timeline.value = tl
-    // 注记顶回最上面。这一步不能省：imagerLayers 是"后 add 的压在上面"，
-    // 7 个动态图层是后加的，不抬一下地名就被埋了。
+
+    // 只预取第一帧。以前是 7 帧全预取（4.6 MB），现在 153 帧全预取是 36 MB，
+    // 打开页面白等十几秒。第一帧够让"点开时间轴"的第一眼不是空白。
+    const first = new Image()
+    first.src = `/risk/${tl.frames[0].img}`
+
+    // 注记顶回最上面。这一步不能省：imageryLayers 是"后 add 的压在上面"，
+    // 后面每建一帧动态图层都会压上来，所以 ensureLayer 里也会再抬一次。
     if (noteLayer) viewer.imageryLayers.raiseToTop(noteLayer)
-    console.log(`[时间轴] 已载入 ${riskLayers.length} 帧：${tl.frames[0].date} ~ ${tl.frames.at(-1).date}`)
+    console.log(`[时间轴] 已载入 ${tl.frames.length} 帧：${tl.frames[0].date} ~ ${tl.frames.at(-1).date}（按需加载）`)
   } catch (err) {
     // 时间轴加载失败只是个功能缺失，不该让整页白屏或抛错中断后面的初始化
     console.warn('[时间轴] 加载失败，时间轴按钮将不可用', err)
@@ -891,7 +977,9 @@ onBeforeUnmount(() => {
           {{ playing ? '⏸' : '▶' }}
         </button>
         <b class="tl-date">{{ curFrame ? curFrame.date : '—' }}</b>
-        <span class="tl-pos">第 {{ frameIdx + 1 }} / {{ timeline.frames.length }} 帧</span>
+        <span class="tl-pos">
+          第 {{ frameIdx + 1 }} / {{ timeline.frames.length }} 帧<template v-if="frameLoading"> · 载入中…</template>
+        </span>
       </div>
 
       <!-- 用 @input 不用 @change：拖动过程中图就要跟着变 -->

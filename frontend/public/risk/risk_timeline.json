@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24 19:52:18",
+  "generated_at": "2026-11-24 21:40:18",
   "layer": "dynamic_risk",
   "desc": "静态地形易涝指数 × 降雨强度放大系数（逐日）",
   "bbox_wgs84": [
@@ -59,15 +59,1807 @@
   "factor_max": 2.0,
   "frames": [
     {
+      "date": "2020-05-01",
+      "img": "risk_20200501.webp",
+      "bin": "risk_level_20200501.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 4.9,
+        "WH02": 4.0,
+        "WH03": 4.3,
+        "WH04": 2.7,
+        "WH05": 7.6
+      },
+      "api_mean": 19.2,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-02",
+      "img": "risk_20200502.webp",
+      "bin": "risk_level_20200502.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 17.3,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-03",
+      "img": "risk_20200503.webp",
+      "bin": "risk_level_20200503.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 15.5,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-04",
+      "img": "risk_20200504.webp",
+      "bin": "risk_level_20200504.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.1,
+        "WH03": 0.2,
+        "WH04": 0.0,
+        "WH05": 1.6
+      },
+      "api_mean": 14.4,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-05",
+      "img": "risk_20200505.webp",
+      "bin": "risk_level_20200505.bin",
+      "mean": 0.3281,
+      "median": 0.3067,
+      "p90": 0.5792,
+      "max": 0.984,
+      "area_high_km2": 644.7,
+      "area_extreme_km2": 215.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 23.1,
+        "WH02": 16.8,
+        "WH03": 13.0,
+        "WH04": 15.0,
+        "WH05": 26.8
+      },
+      "api_mean": 31.9,
+      "factor_min": 1.0,
+      "factor_max": 1.025
+    },
+    {
+      "date": "2020-05-06",
+      "img": "risk_20200506.webp",
+      "bin": "risk_level_20200506.bin",
+      "mean": 0.3274,
+      "median": 0.3059,
+      "p90": 0.5783,
+      "max": 0.984,
+      "area_high_km2": 639.8,
+      "area_extreme_km2": 213.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.8,
+        "WH02": 0.3,
+        "WH03": 0.8,
+        "WH04": 0.6,
+        "WH05": 0.6
+      },
+      "api_mean": 29.3,
+      "factor_min": 1.0,
+      "factor_max": 1.018
+    },
+    {
+      "date": "2020-05-07",
+      "img": "risk_20200507.webp",
+      "bin": "risk_level_20200507.bin",
+      "mean": 0.3272,
+      "median": 0.3057,
+      "p90": 0.5781,
+      "max": 0.984,
+      "area_high_km2": 638.9,
+      "area_extreme_km2": 213.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 1.5,
+        "WH02": 1.2,
+        "WH03": 0.9,
+        "WH04": 1.2,
+        "WH05": 3.4
+      },
+      "api_mean": 28.0,
+      "factor_min": 1.0,
+      "factor_max": 1.017
+    },
+    {
+      "date": "2020-05-08",
+      "img": "risk_20200508.webp",
+      "bin": "risk_level_20200508.bin",
+      "mean": 0.3296,
+      "median": 0.3083,
+      "p90": 0.5814,
+      "max": 0.9843,
+      "area_high_km2": 657.9,
+      "area_extreme_km2": 220.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9843
+      },
+      "rain_mm": {
+        "WH01": 10.6,
+        "WH02": 8.6,
+        "WH03": 8.3,
+        "WH04": 10.6,
+        "WH05": 11.9
+      },
+      "api_mean": 35.2,
+      "factor_min": 1.0,
+      "factor_max": 1.034
+    },
+    {
+      "date": "2020-05-09",
+      "img": "risk_20200509.webp",
+      "bin": "risk_level_20200509.bin",
+      "mean": 0.3279,
+      "median": 0.3065,
+      "p90": 0.579,
+      "max": 0.984,
+      "area_high_km2": 643.8,
+      "area_extreme_km2": 215.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 31.7,
+      "factor_min": 1.0,
+      "factor_max": 1.024
+    },
+    {
+      "date": "2020-05-10",
+      "img": "risk_20200510.webp",
+      "bin": "risk_level_20200510.bin",
+      "mean": 0.3272,
+      "median": 0.3057,
+      "p90": 0.5781,
+      "max": 0.984,
+      "area_high_km2": 638.8,
+      "area_extreme_km2": 213.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 28.5,
+      "factor_min": 1.0,
+      "factor_max": 1.015
+    },
+    {
+      "date": "2020-05-11",
+      "img": "risk_20200511.webp",
+      "bin": "risk_level_20200511.bin",
+      "mean": 0.3268,
+      "median": 0.3053,
+      "p90": 0.5779,
+      "max": 0.984,
+      "area_high_km2": 637.4,
+      "area_extreme_km2": 212.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.5,
+        "WH02": 0.5,
+        "WH03": 0.7,
+        "WH04": 0.6,
+        "WH05": 0.0
+      },
+      "api_mean": 26.1,
+      "factor_min": 1.0,
+      "factor_max": 1.007
+    },
+    {
+      "date": "2020-05-12",
+      "img": "risk_20200512.webp",
+      "bin": "risk_level_20200512.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 23.5,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-13",
+      "img": "risk_20200513.webp",
+      "bin": "risk_level_20200513.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 1.2,
+        "WH02": 0.1,
+        "WH03": 0.5,
+        "WH04": 0.3,
+        "WH05": 0.0
+      },
+      "api_mean": 21.6,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-14",
+      "img": "risk_20200514.webp",
+      "bin": "risk_level_20200514.bin",
+      "mean": 0.3388,
+      "median": 0.318,
+      "p90": 0.5956,
+      "max": 0.9869,
+      "area_high_km2": 739.3,
+      "area_extreme_km2": 255.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9869
+      },
+      "rain_mm": {
+        "WH01": 34.9,
+        "WH02": 34.0,
+        "WH03": 34.5,
+        "WH04": 34.3,
+        "WH05": 34.0
+      },
+      "api_mean": 53.8,
+      "factor_min": 1.044,
+      "factor_max": 1.06
+    },
+    {
+      "date": "2020-05-15",
+      "img": "risk_20200515.webp",
+      "bin": "risk_level_20200515.bin",
+      "mean": 0.3361,
+      "median": 0.3151,
+      "p90": 0.5916,
+      "max": 0.9862,
+      "area_high_km2": 717.0,
+      "area_extreme_km2": 244.1,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9862
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 48.4,
+      "factor_min": 1.033,
+      "factor_max": 1.048
+    },
+    {
+      "date": "2020-05-16",
+      "img": "risk_20200516.webp",
+      "bin": "risk_level_20200516.bin",
+      "mean": 0.3337,
+      "median": 0.3126,
+      "p90": 0.5881,
+      "max": 0.9857,
+      "area_high_km2": 697.1,
+      "area_extreme_km2": 235.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9857
+      },
+      "rain_mm": {
+        "WH01": 0.3,
+        "WH02": 0.0,
+        "WH03": 0.2,
+        "WH04": 0.1,
+        "WH05": 0.1
+      },
+      "api_mean": 43.7,
+      "factor_min": 1.024,
+      "factor_max": 1.037
+    },
+    {
+      "date": "2020-05-17",
+      "img": "risk_20200517.webp",
+      "bin": "risk_level_20200517.bin",
+      "mean": 0.3315,
+      "median": 0.3103,
+      "p90": 0.5848,
+      "max": 0.9851,
+      "area_high_km2": 678.7,
+      "area_extreme_km2": 227.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9851
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 39.3,
+      "factor_min": 1.015,
+      "factor_max": 1.027
+    },
+    {
+      "date": "2020-05-18",
+      "img": "risk_20200518.webp",
+      "bin": "risk_level_20200518.bin",
+      "mean": 0.3296,
+      "median": 0.3082,
+      "p90": 0.5819,
+      "max": 0.9846,
+      "area_high_km2": 661.0,
+      "area_extreme_km2": 221.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9846
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.0,
+        "WH03": 0.1,
+        "WH04": 0.0,
+        "WH05": 0.2
+      },
+      "api_mean": 35.5,
+      "factor_min": 1.007,
+      "factor_max": 1.018
+    },
+    {
+      "date": "2020-05-19",
+      "img": "risk_20200519.webp",
+      "bin": "risk_level_20200519.bin",
+      "mean": 0.3278,
+      "median": 0.3063,
+      "p90": 0.5791,
+      "max": 0.9841,
+      "area_high_km2": 644.5,
+      "area_extreme_km2": 215.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9841
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 31.9,
+      "factor_min": 1.0,
+      "factor_max": 1.01
+    },
+    {
+      "date": "2020-05-20",
+      "img": "risk_20200520.webp",
+      "bin": "risk_level_20200520.bin",
+      "mean": 0.3268,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 637.1,
+      "area_extreme_km2": 212.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.2,
+        "WH02": 0.3,
+        "WH03": 0.7,
+        "WH04": 1.3,
+        "WH05": 0.0
+      },
+      "api_mean": 29.2,
+      "factor_min": 1.0,
+      "factor_max": 1.003
+    },
+    {
+      "date": "2020-05-21",
+      "img": "risk_20200521.webp",
+      "bin": "risk_level_20200521.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 26.3,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-22",
+      "img": "risk_20200522.webp",
+      "bin": "risk_level_20200522.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 23.7,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-23",
+      "img": "risk_20200523.webp",
+      "bin": "risk_level_20200523.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 21.3,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-24",
+      "img": "risk_20200524.webp",
+      "bin": "risk_level_20200524.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.1,
+        "WH03": 0.1,
+        "WH04": 0.6,
+        "WH05": 0.0
+      },
+      "api_mean": 19.4,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-25",
+      "img": "risk_20200525.webp",
+      "bin": "risk_level_20200525.bin",
+      "mean": 0.3297,
+      "median": 0.3083,
+      "p90": 0.5824,
+      "max": 0.9848,
+      "area_high_km2": 664.0,
+      "area_extreme_km2": 222.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9848
+      },
+      "rain_mm": {
+        "WH01": 18.8,
+        "WH02": 20.4,
+        "WH03": 17.8,
+        "WH04": 22.2,
+        "WH05": 13.3
+      },
+      "api_mean": 35.9,
+      "factor_min": 1.004,
+      "factor_max": 1.021
+    },
+    {
+      "date": "2020-05-26",
+      "img": "risk_20200526.webp",
+      "bin": "risk_level_20200526.bin",
+      "mean": 0.3281,
+      "median": 0.3066,
+      "p90": 0.58,
+      "max": 0.9844,
+      "area_high_km2": 650.1,
+      "area_extreme_km2": 217.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9844
+      },
+      "rain_mm": {
+        "WH01": 0.3,
+        "WH02": 0.5,
+        "WH03": 0.5,
+        "WH04": 0.7,
+        "WH05": 0.2
+      },
+      "api_mean": 32.8,
+      "factor_min": 1.0,
+      "factor_max": 1.014
+    },
+    {
+      "date": "2020-05-27",
+      "img": "risk_20200527.webp",
+      "bin": "risk_level_20200527.bin",
+      "mean": 0.3269,
+      "median": 0.3053,
+      "p90": 0.5779,
+      "max": 0.984,
+      "area_high_km2": 637.8,
+      "area_extreme_km2": 212.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.1
+      },
+      "api_mean": 29.5,
+      "factor_min": 1.0,
+      "factor_max": 1.006
+    },
+    {
+      "date": "2020-05-28",
+      "img": "risk_20200528.webp",
+      "bin": "risk_level_20200528.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 26.6,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-05-29",
+      "img": "risk_20200529.webp",
+      "bin": "risk_level_20200529.bin",
+      "mean": 0.3278,
+      "median": 0.3063,
+      "p90": 0.5796,
+      "max": 0.9843,
+      "area_high_km2": 647.3,
+      "area_extreme_km2": 216.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9843
+      },
+      "rain_mm": {
+        "WH01": 8.5,
+        "WH02": 8.2,
+        "WH03": 8.7,
+        "WH04": 9.9,
+        "WH05": 4.8
+      },
+      "api_mean": 31.9,
+      "factor_min": 1.0,
+      "factor_max": 1.014
+    },
+    {
+      "date": "2020-05-30",
+      "img": "risk_20200530.webp",
+      "bin": "risk_level_20200530.bin",
+      "mean": 0.3268,
+      "median": 0.3053,
+      "p90": 0.5779,
+      "max": 0.984,
+      "area_high_km2": 637.5,
+      "area_extreme_km2": 212.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.2,
+        "WH02": 0.0,
+        "WH03": 0.1,
+        "WH04": 0.0,
+        "WH05": 0.3
+      },
+      "api_mean": 28.9,
+      "factor_min": 1.0,
+      "factor_max": 1.006
+    },
+    {
+      "date": "2020-05-31",
+      "img": "risk_20200531.webp",
+      "bin": "risk_level_20200531.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 26.0,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-01",
+      "img": "risk_20200601.webp",
+      "bin": "risk_level_20200601.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 23.4,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-02",
+      "img": "risk_20200602.webp",
+      "bin": "risk_level_20200602.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 2.8,
+        "WH02": 3.8,
+        "WH03": 2.9,
+        "WH04": 3.3,
+        "WH05": 1.2
+      },
+      "api_mean": 23.8,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-03",
+      "img": "risk_20200603.webp",
+      "bin": "risk_level_20200603.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 1.6,
+        "WH02": 1.5,
+        "WH03": 1.4,
+        "WH04": 0.5,
+        "WH05": 1.5
+      },
+      "api_mean": 22.7,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-04",
+      "img": "risk_20200604.webp",
+      "bin": "risk_level_20200604.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.1,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.3
+      },
+      "api_mean": 20.6,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-05",
+      "img": "risk_20200605.webp",
+      "bin": "risk_level_20200605.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.5,
+        "WH02": 0.7,
+        "WH03": 0.5,
+        "WH04": 0.1,
+        "WH05": 0.6
+      },
+      "api_mean": 19.0,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-06",
+      "img": "risk_20200606.webp",
+      "bin": "risk_level_20200606.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.2,
+        "WH03": 0.2,
+        "WH04": 0.3,
+        "WH05": 0.0
+      },
+      "api_mean": 17.2,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-07",
+      "img": "risk_20200607.webp",
+      "bin": "risk_level_20200607.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.3,
+        "WH02": 0.2,
+        "WH03": 0.3,
+        "WH04": 0.0,
+        "WH05": 0.1
+      },
+      "api_mean": 15.7,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-08",
+      "img": "risk_20200608.webp",
+      "bin": "risk_level_20200608.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.2,
+        "WH02": 0.2,
+        "WH03": 0.3,
+        "WH04": 0.0,
+        "WH05": 0.2
+      },
+      "api_mean": 14.3,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-06-09",
+      "img": "risk_20200609.webp",
+      "bin": "risk_level_20200609.bin",
+      "mean": 0.3277,
+      "median": 0.3062,
+      "p90": 0.5793,
+      "max": 0.9842,
+      "area_high_km2": 645.9,
+      "area_extreme_km2": 215.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9842
+      },
+      "rain_mm": {
+        "WH01": 18.0,
+        "WH02": 19.4,
+        "WH03": 16.2,
+        "WH04": 22.0,
+        "WH05": 20.0
+      },
+      "api_mean": 32.0,
+      "factor_min": 1.0,
+      "factor_max": 1.012
+    },
+    {
+      "date": "2020-06-10",
+      "img": "risk_20200610.webp",
+      "bin": "risk_level_20200610.bin",
+      "mean": 0.3344,
+      "median": 0.3133,
+      "p90": 0.5895,
+      "max": 0.986,
+      "area_high_km2": 705.6,
+      "area_extreme_km2": 238.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.986
+      },
+      "rain_mm": {
+        "WH01": 18.9,
+        "WH02": 18.4,
+        "WH03": 16.6,
+        "WH04": 14.0,
+        "WH05": 15.1
+      },
+      "api_mean": 45.4,
+      "factor_min": 1.027,
+      "factor_max": 1.039
+    },
+    {
+      "date": "2020-06-11",
+      "img": "risk_20200611.webp",
+      "bin": "risk_level_20200611.bin",
+      "mean": 0.3326,
+      "median": 0.3114,
+      "p90": 0.5868,
+      "max": 0.9855,
+      "area_high_km2": 688.9,
+      "area_extreme_km2": 232.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9855
+      },
+      "rain_mm": {
+        "WH01": 0.5,
+        "WH02": 0.6,
+        "WH03": 0.3,
+        "WH04": 2.4,
+        "WH05": 0.6
+      },
+      "api_mean": 41.7,
+      "factor_min": 1.019,
+      "factor_max": 1.03
+    },
+    {
+      "date": "2020-06-12",
+      "img": "risk_20200612.webp",
+      "bin": "risk_level_20200612.bin",
+      "mean": 0.3481,
+      "median": 0.3279,
+      "p90": 0.6102,
+      "max": 0.9892,
+      "area_high_km2": 815.3,
+      "area_extreme_km2": 299.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9892
+      },
+      "rain_mm": {
+        "WH01": 42.5,
+        "WH02": 31.5,
+        "WH03": 43.5,
+        "WH04": 27.6,
+        "WH05": 33.1
+      },
+      "api_mean": 73.2,
+      "factor_min": 1.079,
+      "factor_max": 1.109
+    },
+    {
+      "date": "2020-06-13",
+      "img": "risk_20200613.webp",
+      "bin": "risk_level_20200613.bin",
+      "mean": 0.3598,
+      "median": 0.3406,
+      "p90": 0.6265,
+      "max": 0.991,
+      "area_high_km2": 888.9,
+      "area_extreme_km2": 364.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.991
+      },
+      "rain_mm": {
+        "WH01": 31.1,
+        "WH02": 28.7,
+        "WH03": 26.3,
+        "WH04": 24.0,
+        "WH05": 46.0
+      },
+      "api_mean": 97.1,
+      "factor_min": 1.116,
+      "factor_max": 1.164
+    },
+    {
+      "date": "2020-06-14",
+      "img": "risk_20200614.webp",
+      "bin": "risk_level_20200614.bin",
+      "mean": 0.3642,
+      "median": 0.3455,
+      "p90": 0.6328,
+      "max": 0.9917,
+      "area_high_km2": 914.1,
+      "area_extreme_km2": 393.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9917
+      },
+      "rain_mm": {
+        "WH01": 17.3,
+        "WH02": 19.4,
+        "WH03": 21.1,
+        "WH04": 13.7,
+        "WH05": 23.9
+      },
+      "api_mean": 106.5,
+      "factor_min": 1.127,
+      "factor_max": 1.192
+    },
+    {
+      "date": "2020-06-15",
+      "img": "risk_20200615.webp",
+      "bin": "risk_level_20200615.bin",
+      "mean": 0.3622,
+      "median": 0.3432,
+      "p90": 0.6298,
+      "max": 0.9914,
+      "area_high_km2": 902.3,
+      "area_extreme_km2": 379.1,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9914
+      },
+      "rain_mm": {
+        "WH01": 5.1,
+        "WH02": 7.6,
+        "WH03": 4.3,
+        "WH04": 6.4,
+        "WH05": 7.8
+      },
+      "api_mean": 102.1,
+      "factor_min": 1.121,
+      "factor_max": 1.183
+    },
+    {
+      "date": "2020-06-16",
+      "img": "risk_20200616.webp",
+      "bin": "risk_level_20200616.bin",
+      "mean": 0.3575,
+      "median": 0.3381,
+      "p90": 0.6229,
+      "max": 0.9906,
+      "area_high_km2": 873.6,
+      "area_extreme_km2": 349.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9906
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 1.1
+      },
+      "api_mean": 92.1,
+      "factor_min": 1.103,
+      "factor_max": 1.161
+    },
+    {
+      "date": "2020-06-17",
+      "img": "risk_20200617.webp",
+      "bin": "risk_level_20200617.bin",
+      "mean": 0.3547,
+      "median": 0.3351,
+      "p90": 0.6188,
+      "max": 0.99,
+      "area_high_km2": 856.0,
+      "area_extreme_km2": 332.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.99
+      },
+      "rain_mm": {
+        "WH01": 3.4,
+        "WH02": 2.9,
+        "WH03": 2.3,
+        "WH04": 1.8,
+        "WH05": 5.8
+      },
+      "api_mean": 86.1,
+      "factor_min": 1.09,
+      "factor_max": 1.151
+    },
+    {
+      "date": "2020-06-18",
+      "img": "risk_20200618.webp",
+      "bin": "risk_level_20200618.bin",
+      "mean": 0.3562,
+      "median": 0.3368,
+      "p90": 0.6208,
+      "max": 0.9903,
+      "area_high_km2": 864.9,
+      "area_extreme_km2": 340.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9903
+      },
+      "rain_mm": {
+        "WH01": 11.8,
+        "WH02": 10.0,
+        "WH03": 11.3,
+        "WH04": 8.6,
+        "WH05": 16.6
+      },
+      "api_mean": 89.2,
+      "factor_min": 1.093,
+      "factor_max": 1.165
+    },
+    {
+      "date": "2020-06-19",
+      "img": "risk_20200619.webp",
+      "bin": "risk_level_20200619.bin",
+      "mean": 0.3524,
+      "median": 0.3327,
+      "p90": 0.6155,
+      "max": 0.9896,
+      "area_high_km2": 840.5,
+      "area_extreme_km2": 319.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9896
+      },
+      "rain_mm": {
+        "WH01": 1.3,
+        "WH02": 1.4,
+        "WH03": 1.5,
+        "WH04": 1.7,
+        "WH05": 0.1
+      },
+      "api_mean": 81.5,
+      "factor_min": 1.081,
+      "factor_max": 1.142
+    },
+    {
+      "date": "2020-06-20",
+      "img": "risk_20200620.webp",
+      "bin": "risk_level_20200620.bin",
+      "mean": 0.3532,
+      "median": 0.3336,
+      "p90": 0.6162,
+      "max": 0.9896,
+      "area_high_km2": 844.0,
+      "area_extreme_km2": 322.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9896
+      },
+      "rain_mm": {
+        "WH01": 8.7,
+        "WH02": 7.6,
+        "WH03": 6.6,
+        "WH04": 6.3,
+        "WH05": 18.3
+      },
+      "api_mean": 82.8,
+      "factor_min": 1.08,
+      "factor_max": 1.16
+    },
+    {
+      "date": "2020-06-21",
+      "img": "risk_20200621.webp",
+      "bin": "risk_level_20200621.bin",
+      "mean": 0.3704,
+      "median": 0.3522,
+      "p90": 0.6409,
+      "max": 0.9924,
+      "area_high_km2": 946.3,
+      "area_extreme_km2": 432.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9924
+      },
+      "rain_mm": {
+        "WH01": 44.7,
+        "WH02": 45.0,
+        "WH03": 43.8,
+        "WH04": 40.5,
+        "WH05": 49.3
+      },
+      "api_mean": 119.2,
+      "factor_min": 1.152,
+      "factor_max": 1.243
+    },
+    {
+      "date": "2020-06-22",
+      "img": "risk_20200622.webp",
+      "bin": "risk_level_20200622.bin",
+      "mean": 0.3778,
+      "median": 0.3603,
+      "p90": 0.6518,
+      "max": 0.9935,
+      "area_high_km2": 980.3,
+      "area_extreme_km2": 491.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9935
+      },
+      "rain_mm": {
+        "WH01": 31.6,
+        "WH02": 27.4,
+        "WH03": 28.8,
+        "WH04": 28.2,
+        "WH05": 26.4
+      },
+      "api_mean": 135.8,
+      "factor_min": 1.19,
+      "factor_max": 1.268
+    },
+    {
+      "date": "2020-06-23",
+      "img": "risk_20200623.webp",
+      "bin": "risk_level_20200623.bin",
+      "mean": 0.3761,
+      "median": 0.3583,
+      "p90": 0.6495,
+      "max": 0.9933,
+      "area_high_km2": 972.9,
+      "area_extreme_km2": 479.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9933
+      },
+      "rain_mm": {
+        "WH01": 6.1,
+        "WH02": 10.1,
+        "WH03": 8.5,
+        "WH04": 20.0,
+        "WH05": 4.7
+      },
+      "api_mean": 132.1,
+      "factor_min": 1.207,
+      "factor_max": 1.245
+    },
+    {
+      "date": "2020-06-24",
+      "img": "risk_20200624.webp",
+      "bin": "risk_level_20200624.bin",
+      "mean": 0.3701,
+      "median": 0.3517,
+      "p90": 0.641,
+      "max": 0.9925,
+      "area_high_km2": 945.2,
+      "area_extreme_km2": 433.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9925
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 118.9,
+      "factor_min": 1.18,
+      "factor_max": 1.214
+    },
+    {
+      "date": "2020-06-25",
+      "img": "risk_20200625.webp",
+      "bin": "risk_level_20200625.bin",
+      "mean": 0.3645,
+      "median": 0.3457,
+      "p90": 0.6331,
+      "max": 0.9917,
+      "area_high_km2": 915.3,
+      "area_extreme_km2": 394.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9917
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 107.0,
+      "factor_min": 1.156,
+      "factor_max": 1.186
+    },
+    {
+      "date": "2020-06-26",
+      "img": "risk_20200626.webp",
+      "bin": "risk_level_20200626.bin",
+      "mean": 0.3612,
+      "median": 0.342,
+      "p90": 0.6282,
+      "max": 0.9911,
+      "area_high_km2": 896.1,
+      "area_extreme_km2": 372.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9911
+      },
+      "rain_mm": {
+        "WH01": 1.9,
+        "WH02": 2.8,
+        "WH03": 1.9,
+        "WH04": 7.9,
+        "WH05": 3.0
+      },
+      "api_mean": 99.8,
+      "factor_min": 1.138,
+      "factor_max": 1.168
+    },
+    {
+      "date": "2020-06-27",
+      "img": "risk_20200627.webp",
+      "bin": "risk_level_20200627.bin",
+      "mean": 0.3603,
+      "median": 0.3411,
+      "p90": 0.6269,
+      "max": 0.991,
+      "area_high_km2": 890.7,
+      "area_extreme_km2": 366.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.991
+      },
+      "rain_mm": {
+        "WH01": 10.7,
+        "WH02": 8.4,
+        "WH03": 7.5,
+        "WH04": 3.9,
+        "WH05": 10.1
+      },
+      "api_mean": 97.9,
+      "factor_min": 1.134,
+      "factor_max": 1.166
+    },
+    {
+      "date": "2020-06-28",
+      "img": "risk_20200628.webp",
+      "bin": "risk_level_20200628.bin",
+      "mean": 0.3667,
+      "median": 0.3481,
+      "p90": 0.636,
+      "max": 0.992,
+      "area_high_km2": 926.6,
+      "area_extreme_km2": 408.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.992
+      },
+      "rain_mm": {
+        "WH01": 28.1,
+        "WH02": 21.9,
+        "WH03": 21.9,
+        "WH04": 16.0,
+        "WH05": 29.1
+      },
+      "api_mean": 111.5,
+      "factor_min": 1.151,
+      "factor_max": 1.205
+    },
+    {
+      "date": "2020-06-29",
+      "img": "risk_20200629.webp",
+      "bin": "risk_level_20200629.bin",
+      "mean": 0.3773,
+      "median": 0.3596,
+      "p90": 0.6513,
+      "max": 0.9935,
+      "area_high_km2": 978.0,
+      "area_extreme_km2": 489.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9935
+      },
+      "rain_mm": {
+        "WH01": 33.8,
+        "WH02": 29.9,
+        "WH03": 29.8,
+        "WH04": 50.6,
+        "WH05": 28.0
+      },
+      "api_mean": 134.8,
+      "factor_min": 1.201,
+      "factor_max": 1.238
+    },
+    {
+      "date": "2020-06-30",
+      "img": "risk_20200630.webp",
+      "bin": "risk_level_20200630.bin",
+      "mean": 0.3712,
+      "median": 0.3529,
+      "p90": 0.6426,
+      "max": 0.9927,
+      "area_high_km2": 950.1,
+      "area_extreme_km2": 442.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9927
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 121.3,
+      "factor_min": 1.175,
+      "factor_max": 1.208
+    },
+    {
+      "date": "2020-07-01",
+      "img": "risk_20200701.webp",
+      "bin": "risk_level_20200701.bin",
+      "mean": 0.3655,
+      "median": 0.3467,
+      "p90": 0.6346,
+      "max": 0.9918,
+      "area_high_km2": 920.5,
+      "area_extreme_km2": 402.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9918
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 109.2,
+      "factor_min": 1.151,
+      "factor_max": 1.18
+    },
+    {
+      "date": "2020-07-02",
+      "img": "risk_20200702.webp",
+      "bin": "risk_level_20200702.bin",
+      "mean": 0.3821,
+      "median": 0.3648,
+      "p90": 0.6587,
+      "max": 0.9942,
+      "area_high_km2": 995.4,
+      "area_extreme_km2": 532.8,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9942
+      },
+      "rain_mm": {
+        "WH01": 59.4,
+        "WH02": 46.4,
+        "WH03": 53.4,
+        "WH04": 38.7,
+        "WH05": 40.5
+      },
+      "api_mean": 145.9,
+      "factor_min": 1.231,
+      "factor_max": 1.279
+    },
+    {
+      "date": "2020-07-03",
+      "img": "risk_20200703.webp",
+      "bin": "risk_level_20200703.bin",
+      "mean": 0.3788,
+      "median": 0.3612,
+      "p90": 0.6545,
+      "max": 0.9939,
+      "area_high_km2": 984.6,
+      "area_extreme_km2": 507.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9939
+      },
+      "rain_mm": {
+        "WH01": 16.4,
+        "WH02": 9.0,
+        "WH03": 8.7,
+        "WH04": 1.0,
+        "WH05": 3.3
+      },
+      "api_mean": 139.0,
+      "factor_min": 1.21,
+      "factor_max": 1.279
+    },
+    {
       "date": "2020-07-04",
-      "png": "risk_20200704.png",
+      "img": "risk_20200704.webp",
       "bin": "risk_level_20200704.bin",
-      "mean": 0.3942,
-      "median": 0.3781,
-      "p90": 0.677,
+      "mean": 0.3943,
+      "median": 0.3783,
+      "p90": 0.6772,
       "max": 0.9957,
-      "area_high_km2": 1024.7,
-      "area_extreme_km2": 651.9,
+      "area_high_km2": 1024.9,
+      "area_extreme_km2": 653.0,
       "cells": 7863040,
       "no_data": 15056240,
       "top_cell": {
@@ -82,20 +1874,20 @@
         "WH04": 60.9,
         "WH05": 26.8
       },
-      "api_mean": 174.8,
+      "api_mean": 175.1,
       "factor_min": 1.247,
       "factor_max": 1.336
     },
     {
       "date": "2020-07-05",
-      "png": "risk_20200705.png",
+      "img": "risk_20200705.webp",
       "bin": "risk_level_20200705.bin",
-      "mean": 0.4355,
-      "median": 0.4252,
-      "p90": 0.736,
+      "mean": 0.4356,
+      "median": 0.4253,
+      "p90": 0.7361,
       "max": 0.9985,
-      "area_high_km2": 1000.8,
-      "area_extreme_km2": 1114.3,
+      "area_high_km2": 1000.6,
+      "area_extreme_km2": 1115.3,
       "cells": 7863040,
       "no_data": 15056240,
       "top_cell": {
@@ -110,20 +1902,20 @@
         "WH04": 167.2,
         "WH05": 30.4
       },
-      "api_mean": 280.1,
-      "factor_min": 1.28,
+      "api_mean": 280.4,
+      "factor_min": 1.281,
       "factor_max": 1.63
     },
     {
       "date": "2020-07-06",
-      "png": "risk_20200706.png",
+      "img": "risk_20200706.webp",
       "bin": "risk_level_20200706.bin",
-      "mean": 0.4845,
-      "median": 0.4833,
-      "p90": 0.797,
+      "mean": 0.4846,
+      "median": 0.4834,
+      "p90": 0.7971,
       "max": 0.9996,
       "area_high_km2": 961.7,
-      "area_extreme_km2": 1651.1,
+      "area_extreme_km2": 1651.8,
       "cells": 7863040,
       "no_data": 15056240,
       "top_cell": {
@@ -138,20 +1930,20 @@
         "WH04": 203.0,
         "WH05": 94.9
       },
-      "api_mean": 420.0,
+      "api_mean": 420.2,
       "factor_min": 1.448,
-      "factor_max": 1.992
+      "factor_max": 1.993
     },
     {
       "date": "2020-07-07",
-      "png": "risk_20200707.png",
+      "img": "risk_20200707.webp",
       "bin": "risk_level_20200707.bin",
       "mean": 0.507,
-      "median": 0.5093,
-      "p90": 0.8179,
+      "median": 0.5094,
+      "p90": 0.818,
       "max": 0.9997,
-      "area_high_km2": 1012.2,
-      "area_extreme_km2": 1862.5,
+      "area_high_km2": 1012.3,
+      "area_extreme_km2": 1862.7,
       "cells": 7863040,
       "no_data": 15056240,
       "top_cell": {
@@ -166,20 +1958,20 @@
         "WH04": 84.7,
         "WH05": 171.7
       },
-      "api_mean": 490.3,
+      "api_mean": 490.5,
       "factor_min": 1.762,
       "factor_max": 2.0
     },
     {
       "date": "2020-07-08",
-      "png": "risk_20200708.png",
+      "img": "risk_20200708.webp",
       "bin": "risk_level_20200708.bin",
       "mean": 0.4952,
       "median": 0.4951,
-      "p90": 0.8049,
+      "p90": 0.805,
       "max": 0.9996,
-      "area_high_km2": 969.7,
-      "area_extreme_km2": 1743.4,
+      "area_high_km2": 969.8,
+      "area_extreme_km2": 1743.9,
       "cells": 7863040,
       "no_data": 15056240,
       "top_cell": {
@@ -194,20 +1986,20 @@
         "WH04": 7.2,
         "WH05": 3.3
       },
-      "api_mean": 446.7,
-      "factor_min": 1.686,
-      "factor_max": 1.969
+      "api_mean": 446.8,
+      "factor_min": 1.687,
+      "factor_max": 1.97
     },
     {
       "date": "2020-07-09",
-      "png": "risk_20200709.png",
+      "img": "risk_20200709.webp",
       "bin": "risk_level_20200709.bin",
       "mean": 0.4807,
       "median": 0.4777,
       "p90": 0.7883,
       "max": 0.9995,
       "area_high_km2": 975.5,
-      "area_extreme_km2": 1590.3,
+      "area_extreme_km2": 1590.9,
       "cells": 7863040,
       "no_data": 15056240,
       "top_cell": {
@@ -222,20 +2014,20 @@
         "WH04": 0.3,
         "WH05": 0.7
       },
-      "api_mean": 402.5,
+      "api_mean": 402.7,
       "factor_min": 1.613,
       "factor_max": 1.867
     },
     {
       "date": "2020-07-10",
-      "png": "risk_20200710.png",
+      "img": "risk_20200710.webp",
       "bin": "risk_level_20200710.bin",
-      "mean": 0.4693,
+      "mean": 0.4694,
       "median": 0.4642,
-      "p90": 0.7744,
+      "p90": 0.7745,
       "max": 0.9993,
-      "area_high_km2": 979.4,
-      "area_extreme_km2": 1464.5,
+      "area_high_km2": 979.3,
+      "area_extreme_km2": 1465.0,
       "cells": 7863040,
       "no_data": 15056240,
       "top_cell": {
@@ -250,9 +2042,2305 @@
         "WH04": 4.1,
         "WH05": 15.2
       },
-      "api_mean": 368.8,
+      "api_mean": 368.9,
       "factor_min": 1.578,
-      "factor_max": 1.782
+      "factor_max": 1.783
+    },
+    {
+      "date": "2020-07-11",
+      "img": "risk_20200711.webp",
+      "bin": "risk_level_20200711.bin",
+      "mean": 0.4641,
+      "median": 0.4579,
+      "p90": 0.7674,
+      "max": 0.9991,
+      "area_high_km2": 982.5,
+      "area_extreme_km2": 1403.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9991
+      },
+      "rain_mm": {
+        "WH01": 19.3,
+        "WH02": 18.8,
+        "WH03": 18.5,
+        "WH04": 16.6,
+        "WH05": 31.6
+      },
+      "api_mean": 353.0,
+      "factor_min": 1.581,
+      "factor_max": 1.735
+    },
+    {
+      "date": "2020-07-12",
+      "img": "risk_20200712.webp",
+      "bin": "risk_level_20200712.bin",
+      "mean": 0.4547,
+      "median": 0.4469,
+      "p90": 0.7554,
+      "max": 0.9989,
+      "area_high_km2": 996.8,
+      "area_extreme_km2": 1293.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9989
+      },
+      "rain_mm": {
+        "WH01": 8.6,
+        "WH02": 6.3,
+        "WH03": 3.9,
+        "WH04": 4.4,
+        "WH05": 19.8
+      },
+      "api_mean": 326.3,
+      "factor_min": 1.559,
+      "factor_max": 1.668
+    },
+    {
+      "date": "2020-07-13",
+      "img": "risk_20200713.webp",
+      "bin": "risk_level_20200713.bin",
+      "mean": 0.4437,
+      "median": 0.4342,
+      "p90": 0.7418,
+      "max": 0.9985,
+      "area_high_km2": 1012.8,
+      "area_extreme_km2": 1172.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9985
+      },
+      "rain_mm": {
+        "WH01": 2.6,
+        "WH02": 3.1,
+        "WH03": 2.5,
+        "WH04": 4.6,
+        "WH05": 3.2
+      },
+      "api_mean": 296.9,
+      "factor_min": 1.503,
+      "factor_max": 1.602
+    },
+    {
+      "date": "2020-07-14",
+      "img": "risk_20200714.webp",
+      "bin": "risk_level_20200714.bin",
+      "mean": 0.4326,
+      "median": 0.4214,
+      "p90": 0.7275,
+      "max": 0.9981,
+      "area_high_km2": 1028.1,
+      "area_extreme_km2": 1048.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9981
+      },
+      "rain_mm": {
+        "WH01": 0.4,
+        "WH02": 0.2,
+        "WH03": 0.0,
+        "WH04": 0.2,
+        "WH05": 1.7
+      },
+      "api_mean": 267.7,
+      "factor_min": 1.45,
+      "factor_max": 1.536
+    },
+    {
+      "date": "2020-07-15",
+      "img": "risk_20200715.webp",
+      "bin": "risk_level_20200715.bin",
+      "mean": 0.4243,
+      "median": 0.412,
+      "p90": 0.7166,
+      "max": 0.9977,
+      "area_high_km2": 1038.6,
+      "area_extreme_km2": 956.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9977
+      },
+      "rain_mm": {
+        "WH01": 5.7,
+        "WH02": 5.2,
+        "WH03": 4.8,
+        "WH04": 4.3,
+        "WH05": 8.6
+      },
+      "api_mean": 246.6,
+      "factor_min": 1.417,
+      "factor_max": 1.487
+    },
+    {
+      "date": "2020-07-16",
+      "img": "risk_20200716.webp",
+      "bin": "risk_level_20200716.bin",
+      "mean": 0.4167,
+      "median": 0.4034,
+      "p90": 0.7064,
+      "max": 0.9972,
+      "area_high_km2": 1043.1,
+      "area_extreme_km2": 873.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9972
+      },
+      "rain_mm": {
+        "WH01": 5.1,
+        "WH02": 5.2,
+        "WH03": 5.2,
+        "WH04": 3.7,
+        "WH05": 8.8
+      },
+      "api_mean": 227.6,
+      "factor_min": 1.388,
+      "factor_max": 1.443
+    },
+    {
+      "date": "2020-07-17",
+      "img": "risk_20200717.webp",
+      "bin": "risk_level_20200717.bin",
+      "mean": 0.4083,
+      "median": 0.3938,
+      "p90": 0.6951,
+      "max": 0.9967,
+      "area_high_km2": 1043.6,
+      "area_extreme_km2": 783.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9967
+      },
+      "rain_mm": {
+        "WH01": 1.8,
+        "WH02": 2.4,
+        "WH03": 2.4,
+        "WH04": 1.9,
+        "WH05": 2.6
+      },
+      "api_mean": 207.0,
+      "factor_min": 1.348,
+      "factor_max": 1.397
+    },
+    {
+      "date": "2020-07-18",
+      "img": "risk_20200718.webp",
+      "bin": "risk_level_20200718.bin",
+      "mean": 0.4159,
+      "median": 0.4026,
+      "p90": 0.7045,
+      "max": 0.9971,
+      "area_high_km2": 1046.7,
+      "area_extreme_km2": 858.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9971
+      },
+      "rain_mm": {
+        "WH01": 45.2,
+        "WH02": 29.9,
+        "WH03": 35.5,
+        "WH04": 28.6,
+        "WH05": 53.2
+      },
+      "api_mean": 224.8,
+      "factor_min": 1.406,
+      "factor_max": 1.421
+    },
+    {
+      "date": "2020-07-19",
+      "img": "risk_20200719.webp",
+      "bin": "risk_level_20200719.bin",
+      "mean": 0.4364,
+      "median": 0.4259,
+      "p90": 0.7304,
+      "max": 0.9981,
+      "area_high_km2": 1033.1,
+      "area_extreme_km2": 1076.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9981
+      },
+      "rain_mm": {
+        "WH01": 71.1,
+        "WH02": 67.0,
+        "WH03": 65.9,
+        "WH04": 73.7,
+        "WH05": 87.4
+      },
+      "api_mean": 275.4,
+      "factor_min": 1.504,
+      "factor_max": 1.558
+    },
+    {
+      "date": "2020-07-20",
+      "img": "risk_20200720.webp",
+      "bin": "risk_level_20200720.bin",
+      "mean": 0.4255,
+      "median": 0.4135,
+      "p90": 0.7165,
+      "max": 0.9976,
+      "area_high_km2": 1044.1,
+      "area_extreme_km2": 958.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9976
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.6
+      },
+      "api_mean": 247.9,
+      "factor_min": 1.447,
+      "factor_max": 1.497
+    },
+    {
+      "date": "2020-07-21",
+      "img": "risk_20200721.webp",
+      "bin": "risk_level_20200721.bin",
+      "mean": 0.4195,
+      "median": 0.4066,
+      "p90": 0.7086,
+      "max": 0.9972,
+      "area_high_km2": 1047.7,
+      "area_extreme_km2": 892.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9972
+      },
+      "rain_mm": {
+        "WH01": 9.8,
+        "WH02": 7.9,
+        "WH03": 9.0,
+        "WH04": 10.0,
+        "WH05": 11.9
+      },
+      "api_mean": 232.9,
+      "factor_min": 1.415,
+      "factor_max": 1.466
+    },
+    {
+      "date": "2020-07-22",
+      "img": "risk_20200722.webp",
+      "bin": "risk_level_20200722.bin",
+      "mean": 0.4099,
+      "median": 0.3958,
+      "p90": 0.6959,
+      "max": 0.9966,
+      "area_high_km2": 1048.5,
+      "area_extreme_km2": 790.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9966
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 209.6,
+      "factor_min": 1.367,
+      "factor_max": 1.413
+    },
+    {
+      "date": "2020-07-23",
+      "img": "risk_20200723.webp",
+      "bin": "risk_level_20200723.bin",
+      "mean": 0.4014,
+      "median": 0.3863,
+      "p90": 0.6845,
+      "max": 0.9959,
+      "area_high_km2": 1041.5,
+      "area_extreme_km2": 704.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9959
+      },
+      "rain_mm": {
+        "WH01": 0.5,
+        "WH02": 0.2,
+        "WH03": 0.4,
+        "WH04": 0.3,
+        "WH05": 2.4
+      },
+      "api_mean": 189.4,
+      "factor_min": 1.325,
+      "factor_max": 1.37
+    },
+    {
+      "date": "2020-07-24",
+      "img": "risk_20200724.webp",
+      "bin": "risk_level_20200724.bin",
+      "mean": 0.3939,
+      "median": 0.378,
+      "p90": 0.6743,
+      "max": 0.9953,
+      "area_high_km2": 1028.6,
+      "area_extreme_km2": 633.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9953
+      },
+      "rain_mm": {
+        "WH01": 1.1,
+        "WH02": 1.8,
+        "WH03": 1.1,
+        "WH04": 2.3,
+        "WH05": 2.0
+      },
+      "api_mean": 172.1,
+      "factor_min": 1.289,
+      "factor_max": 1.331
+    },
+    {
+      "date": "2020-07-25",
+      "img": "risk_20200725.webp",
+      "bin": "risk_level_20200725.bin",
+      "mean": 0.3886,
+      "median": 0.372,
+      "p90": 0.6672,
+      "max": 0.9948,
+      "area_high_km2": 1015.4,
+      "area_extreme_km2": 585.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9948
+      },
+      "rain_mm": {
+        "WH01": 4.5,
+        "WH02": 6.1,
+        "WH03": 6.2,
+        "WH04": 8.2,
+        "WH05": 0.5
+      },
+      "api_mean": 160.0,
+      "factor_min": 1.266,
+      "factor_max": 1.293
+    },
+    {
+      "date": "2020-07-26",
+      "img": "risk_20200726.webp",
+      "bin": "risk_level_20200726.bin",
+      "mean": 0.3869,
+      "median": 0.3701,
+      "p90": 0.6653,
+      "max": 0.9947,
+      "area_high_km2": 1010.2,
+      "area_extreme_km2": 573.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9947
+      },
+      "rain_mm": {
+        "WH01": 14.5,
+        "WH02": 10.5,
+        "WH03": 17.3,
+        "WH04": 12.7,
+        "WH05": 7.5
+      },
+      "api_mean": 156.5,
+      "factor_min": 1.258,
+      "factor_max": 1.273
+    },
+    {
+      "date": "2020-07-27",
+      "img": "risk_20200727.webp",
+      "bin": "risk_level_20200727.bin",
+      "mean": 0.411,
+      "median": 0.3969,
+      "p90": 0.6994,
+      "max": 0.9969,
+      "area_high_km2": 1041.5,
+      "area_extreme_km2": 816.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9969
+      },
+      "rain_mm": {
+        "WH01": 78.2,
+        "WH02": 73.9,
+        "WH03": 78.9,
+        "WH04": 87.6,
+        "WH05": 46.6
+      },
+      "api_mean": 213.9,
+      "factor_min": 1.339,
+      "factor_max": 1.426
+    },
+    {
+      "date": "2020-07-28",
+      "img": "risk_20200728.webp",
+      "bin": "risk_level_20200728.bin",
+      "mean": 0.4026,
+      "median": 0.3875,
+      "p90": 0.6881,
+      "max": 0.9963,
+      "area_high_km2": 1037.1,
+      "area_extreme_km2": 730.8,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9963
+      },
+      "rain_mm": {
+        "WH01": 1.6,
+        "WH02": 1.2,
+        "WH03": 1.5,
+        "WH04": 1.4,
+        "WH05": 0.9
+      },
+      "api_mean": 193.8,
+      "factor_min": 1.3,
+      "factor_max": 1.38
+    },
+    {
+      "date": "2020-07-29",
+      "img": "risk_20200729.webp",
+      "bin": "risk_level_20200729.bin",
+      "mean": 0.3945,
+      "median": 0.3784,
+      "p90": 0.6768,
+      "max": 0.9956,
+      "area_high_km2": 1025.2,
+      "area_extreme_km2": 650.8,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9956
+      },
+      "rain_mm": {
+        "WH01": 0.2,
+        "WH02": 0.3,
+        "WH03": 0.2,
+        "WH04": 0.4,
+        "WH05": 0.3
+      },
+      "api_mean": 174.7,
+      "factor_min": 1.264,
+      "factor_max": 1.336
+    },
+    {
+      "date": "2020-07-30",
+      "img": "risk_20200730.webp",
+      "bin": "risk_level_20200730.bin",
+      "mean": 0.3904,
+      "median": 0.3739,
+      "p90": 0.6711,
+      "max": 0.9953,
+      "area_high_km2": 1017.7,
+      "area_extreme_km2": 611.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9953
+      },
+      "rain_mm": {
+        "WH01": 8.5,
+        "WH02": 8.8,
+        "WH03": 9.2,
+        "WH04": 4.6,
+        "WH05": 9.3
+      },
+      "api_mean": 165.3,
+      "factor_min": 1.251,
+      "factor_max": 1.306
+    },
+    {
+      "date": "2020-07-31",
+      "img": "risk_20200731.webp",
+      "bin": "risk_level_20200731.bin",
+      "mean": 0.3842,
+      "median": 0.3671,
+      "p90": 0.6623,
+      "max": 0.9946,
+      "area_high_km2": 1001.1,
+      "area_extreme_km2": 555.1,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9946
+      },
+      "rain_mm": {
+        "WH01": 2.2,
+        "WH02": 1.8,
+        "WH03": 1.0,
+        "WH04": 2.6,
+        "WH05": 3.9
+      },
+      "api_mean": 151.1,
+      "factor_min": 1.228,
+      "factor_max": 1.275
+    },
+    {
+      "date": "2020-08-01",
+      "img": "risk_20200801.webp",
+      "bin": "risk_level_20200801.bin",
+      "mean": 0.3775,
+      "median": 0.3597,
+      "p90": 0.6528,
+      "max": 0.9938,
+      "area_high_km2": 978.2,
+      "area_extreme_km2": 497.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9938
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.2
+      },
+      "api_mean": 136.0,
+      "factor_min": 1.199,
+      "factor_max": 1.241
+    },
+    {
+      "date": "2020-08-02",
+      "img": "risk_20200802.webp",
+      "bin": "risk_level_20200802.bin",
+      "mean": 0.3713,
+      "median": 0.3529,
+      "p90": 0.644,
+      "max": 0.993,
+      "area_high_km2": 951.1,
+      "area_extreme_km2": 448.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.993
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 122.4,
+      "factor_min": 1.173,
+      "factor_max": 1.21
+    },
+    {
+      "date": "2020-08-03",
+      "img": "risk_20200803.webp",
+      "bin": "risk_level_20200803.bin",
+      "mean": 0.3657,
+      "median": 0.3468,
+      "p90": 0.6359,
+      "max": 0.9922,
+      "area_high_km2": 922.9,
+      "area_extreme_km2": 407.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9922
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 110.2,
+      "factor_min": 1.149,
+      "factor_max": 1.183
+    },
+    {
+      "date": "2020-08-04",
+      "img": "risk_20200804.webp",
+      "bin": "risk_level_20200804.bin",
+      "mean": 0.3605,
+      "median": 0.3412,
+      "p90": 0.6284,
+      "max": 0.9914,
+      "area_high_km2": 894.7,
+      "area_extreme_km2": 372.8,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9914
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 99.2,
+      "factor_min": 1.128,
+      "factor_max": 1.158
+    },
+    {
+      "date": "2020-08-05",
+      "img": "risk_20200805.webp",
+      "bin": "risk_level_20200805.bin",
+      "mean": 0.356,
+      "median": 0.3363,
+      "p90": 0.6217,
+      "max": 0.9906,
+      "area_high_km2": 866.7,
+      "area_extreme_km2": 344.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9906
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.3,
+        "WH03": 0.2,
+        "WH04": 0.4,
+        "WH05": 0.3
+      },
+      "api_mean": 89.5,
+      "factor_min": 1.11,
+      "factor_max": 1.137
+    },
+    {
+      "date": "2020-08-06",
+      "img": "risk_20200806.webp",
+      "bin": "risk_level_20200806.bin",
+      "mean": 0.3517,
+      "median": 0.3317,
+      "p90": 0.6154,
+      "max": 0.9898,
+      "area_high_km2": 839.2,
+      "area_extreme_km2": 319.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9898
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.1,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 80.6,
+      "factor_min": 1.092,
+      "factor_max": 1.117
+    },
+    {
+      "date": "2020-08-07",
+      "img": "risk_20200807.webp",
+      "bin": "risk_level_20200807.bin",
+      "mean": 0.3478,
+      "median": 0.3275,
+      "p90": 0.6097,
+      "max": 0.9891,
+      "area_high_km2": 812.2,
+      "area_extreme_km2": 298.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9891
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 72.5,
+      "factor_min": 1.077,
+      "factor_max": 1.099
+    },
+    {
+      "date": "2020-08-08",
+      "img": "risk_20200808.webp",
+      "bin": "risk_level_20200808.bin",
+      "mean": 0.3463,
+      "median": 0.326,
+      "p90": 0.607,
+      "max": 0.9886,
+      "area_high_km2": 799.0,
+      "area_extreme_km2": 289.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9886
+      },
+      "rain_mm": {
+        "WH01": 2.8,
+        "WH02": 2.0,
+        "WH03": 1.4,
+        "WH04": 1.7,
+        "WH05": 11.5
+      },
+      "api_mean": 69.1,
+      "factor_min": 1.077,
+      "factor_max": 1.087
+    },
+    {
+      "date": "2020-08-09",
+      "img": "risk_20200809.webp",
+      "bin": "risk_level_20200809.bin",
+      "mean": 0.3505,
+      "median": 0.3305,
+      "p90": 0.6124,
+      "max": 0.9891,
+      "area_high_km2": 826.3,
+      "area_extreme_km2": 308.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9891
+      },
+      "rain_mm": {
+        "WH01": 12.5,
+        "WH02": 13.0,
+        "WH03": 9.2,
+        "WH04": 13.9,
+        "WH05": 26.2
+      },
+      "api_mean": 77.2,
+      "factor_min": 1.086,
+      "factor_max": 1.128
+    },
+    {
+      "date": "2020-08-10",
+      "img": "risk_20200810.webp",
+      "bin": "risk_level_20200810.bin",
+      "mean": 0.3575,
+      "median": 0.338,
+      "p90": 0.6233,
+      "max": 0.9906,
+      "area_high_km2": 874.0,
+      "area_extreme_km2": 350.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9906
+      },
+      "rain_mm": {
+        "WH01": 21.0,
+        "WH02": 24.5,
+        "WH03": 23.6,
+        "WH04": 31.7,
+        "WH05": 12.9
+      },
+      "api_mean": 92.2,
+      "factor_min": 1.122,
+      "factor_max": 1.152
+    },
+    {
+      "date": "2020-08-11",
+      "img": "risk_20200811.webp",
+      "bin": "risk_level_20200811.bin",
+      "mean": 0.3541,
+      "median": 0.3344,
+      "p90": 0.6184,
+      "max": 0.99,
+      "area_high_km2": 852.3,
+      "area_extreme_km2": 330.8,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.99
+      },
+      "rain_mm": {
+        "WH01": 1.7,
+        "WH02": 1.9,
+        "WH03": 2.2,
+        "WH04": 2.8,
+        "WH05": 2.3
+      },
+      "api_mean": 85.2,
+      "factor_min": 1.108,
+      "factor_max": 1.136
+    },
+    {
+      "date": "2020-08-12",
+      "img": "risk_20200812.webp",
+      "bin": "risk_level_20200812.bin",
+      "mean": 0.3567,
+      "median": 0.3372,
+      "p90": 0.6221,
+      "max": 0.9905,
+      "area_high_km2": 869.8,
+      "area_extreme_km2": 345.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9905
+      },
+      "rain_mm": {
+        "WH01": 15.0,
+        "WH02": 12.9,
+        "WH03": 15.5,
+        "WH04": 10.1,
+        "WH05": 16.2
+      },
+      "api_mean": 90.6,
+      "factor_min": 1.122,
+      "factor_max": 1.138
+    },
+    {
+      "date": "2020-08-13",
+      "img": "risk_20200813.webp",
+      "bin": "risk_level_20200813.bin",
+      "mean": 0.3524,
+      "median": 0.3325,
+      "p90": 0.6158,
+      "max": 0.9897,
+      "area_high_km2": 841.5,
+      "area_extreme_km2": 320.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9897
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 81.5,
+      "factor_min": 1.104,
+      "factor_max": 1.117
+    },
+    {
+      "date": "2020-08-14",
+      "img": "risk_20200814.webp",
+      "bin": "risk_level_20200814.bin",
+      "mean": 0.3484,
+      "median": 0.3283,
+      "p90": 0.61,
+      "max": 0.989,
+      "area_high_km2": 813.9,
+      "area_extreme_km2": 299.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.989
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 73.4,
+      "factor_min": 1.087,
+      "factor_max": 1.099
+    },
+    {
+      "date": "2020-08-15",
+      "img": "risk_20200815.webp",
+      "bin": "risk_level_20200815.bin",
+      "mean": 0.3449,
+      "median": 0.3244,
+      "p90": 0.6047,
+      "max": 0.9882,
+      "area_high_km2": 787.6,
+      "area_extreme_km2": 282.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9882
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 66.0,
+      "factor_min": 1.072,
+      "factor_max": 1.083
+    },
+    {
+      "date": "2020-08-16",
+      "img": "risk_20200816.webp",
+      "bin": "risk_level_20200816.bin",
+      "mean": 0.3416,
+      "median": 0.321,
+      "p90": 0.6,
+      "max": 0.9876,
+      "area_high_km2": 762.8,
+      "area_extreme_km2": 267.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9876
+      },
+      "rain_mm": {
+        "WH01": 0.2,
+        "WH02": 0.0,
+        "WH03": 0.1,
+        "WH04": 0.0,
+        "WH05": 0.1
+      },
+      "api_mean": 59.5,
+      "factor_min": 1.058,
+      "factor_max": 1.068
+    },
+    {
+      "date": "2020-08-17",
+      "img": "risk_20200817.webp",
+      "bin": "risk_level_20200817.bin",
+      "mean": 0.3387,
+      "median": 0.3179,
+      "p90": 0.5956,
+      "max": 0.9869,
+      "area_high_km2": 738.9,
+      "area_extreme_km2": 254.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9869
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.2
+      },
+      "api_mean": 53.6,
+      "factor_min": 1.046,
+      "factor_max": 1.055
+    },
+    {
+      "date": "2020-08-18",
+      "img": "risk_20200818.webp",
+      "bin": "risk_level_20200818.bin",
+      "mean": 0.336,
+      "median": 0.315,
+      "p90": 0.5916,
+      "max": 0.9863,
+      "area_high_km2": 717.1,
+      "area_extreme_km2": 244.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9863
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 48.2,
+      "factor_min": 1.035,
+      "factor_max": 1.043
+    },
+    {
+      "date": "2020-08-19",
+      "img": "risk_20200819.webp",
+      "bin": "risk_level_20200819.bin",
+      "mean": 0.3366,
+      "median": 0.3157,
+      "p90": 0.5924,
+      "max": 0.9863,
+      "area_high_km2": 721.3,
+      "area_extreme_km2": 246.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9863
+      },
+      "rain_mm": {
+        "WH01": 7.5,
+        "WH02": 4.1,
+        "WH03": 5.0,
+        "WH04": 3.9,
+        "WH05": 9.3
+      },
+      "api_mean": 49.4,
+      "factor_min": 1.034,
+      "factor_max": 1.052
+    },
+    {
+      "date": "2020-08-20",
+      "img": "risk_20200820.webp",
+      "bin": "risk_level_20200820.bin",
+      "mean": 0.3437,
+      "median": 0.3232,
+      "p90": 0.6039,
+      "max": 0.9884,
+      "area_high_km2": 782.9,
+      "area_extreme_km2": 278.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9884
+      },
+      "rain_mm": {
+        "WH01": 26.2,
+        "WH02": 22.8,
+        "WH03": 26.6,
+        "WH04": 17.2,
+        "WH05": 6.7
+      },
+      "api_mean": 64.3,
+      "factor_min": 1.055,
+      "factor_max": 1.088
+    },
+    {
+      "date": "2020-08-21",
+      "img": "risk_20200821.webp",
+      "bin": "risk_level_20200821.bin",
+      "mean": 0.3428,
+      "median": 0.3221,
+      "p90": 0.6025,
+      "max": 0.9882,
+      "area_high_km2": 776.2,
+      "area_extreme_km2": 274.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9882
+      },
+      "rain_mm": {
+        "WH01": 3.8,
+        "WH02": 4.2,
+        "WH03": 5.2,
+        "WH04": 6.0,
+        "WH05": 3.3
+      },
+      "api_mean": 62.4,
+      "factor_min": 1.05,
+      "factor_max": 1.081
+    },
+    {
+      "date": "2020-08-22",
+      "img": "risk_20200822.webp",
+      "bin": "risk_level_20200822.bin",
+      "mean": 0.3408,
+      "median": 0.32,
+      "p90": 0.5995,
+      "max": 0.9877,
+      "area_high_km2": 759.9,
+      "area_extreme_km2": 265.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9877
+      },
+      "rain_mm": {
+        "WH01": 1.5,
+        "WH02": 1.3,
+        "WH03": 1.6,
+        "WH04": 4.1,
+        "WH05": 2.1
+      },
+      "api_mean": 58.3,
+      "factor_min": 1.043,
+      "factor_max": 1.069
+    },
+    {
+      "date": "2020-08-23",
+      "img": "risk_20200823.webp",
+      "bin": "risk_level_20200823.bin",
+      "mean": 0.338,
+      "median": 0.317,
+      "p90": 0.5952,
+      "max": 0.987,
+      "area_high_km2": 736.3,
+      "area_extreme_km2": 253.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.987
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.2,
+        "WH05": 0.1
+      },
+      "api_mean": 52.5,
+      "factor_min": 1.033,
+      "factor_max": 1.056
+    },
+    {
+      "date": "2020-08-24",
+      "img": "risk_20200824.webp",
+      "bin": "risk_level_20200824.bin",
+      "mean": 0.3357,
+      "median": 0.3146,
+      "p90": 0.5917,
+      "max": 0.9864,
+      "area_high_km2": 717.0,
+      "area_extreme_km2": 243.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9864
+      },
+      "rain_mm": {
+        "WH01": 0.6,
+        "WH02": 0.1,
+        "WH03": 0.4,
+        "WH04": 0.2,
+        "WH05": 2.1
+      },
+      "api_mean": 47.9,
+      "factor_min": 1.028,
+      "factor_max": 1.045
+    },
+    {
+      "date": "2020-08-25",
+      "img": "risk_20200825.webp",
+      "bin": "risk_level_20200825.bin",
+      "mean": 0.3341,
+      "median": 0.3129,
+      "p90": 0.5893,
+      "max": 0.9861,
+      "area_high_km2": 703.9,
+      "area_extreme_km2": 237.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9861
+      },
+      "rain_mm": {
+        "WH01": 0.7,
+        "WH02": 1.6,
+        "WH03": 1.7,
+        "WH04": 3.9,
+        "WH05": 0.0
+      },
+      "api_mean": 44.7,
+      "factor_min": 1.018,
+      "factor_max": 1.037
+    },
+    {
+      "date": "2020-08-26",
+      "img": "risk_20200826.webp",
+      "bin": "risk_level_20200826.bin",
+      "mean": 0.3319,
+      "median": 0.3106,
+      "p90": 0.5859,
+      "max": 0.9855,
+      "area_high_km2": 683.9,
+      "area_extreme_km2": 229.8,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9855
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 40.3,
+      "factor_min": 1.01,
+      "factor_max": 1.027
+    },
+    {
+      "date": "2020-08-27",
+      "img": "risk_20200827.webp",
+      "bin": "risk_level_20200827.bin",
+      "mean": 0.3298,
+      "median": 0.3084,
+      "p90": 0.5828,
+      "max": 0.985,
+      "area_high_km2": 665.7,
+      "area_extreme_km2": 222.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.985
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 36.2,
+      "factor_min": 1.003,
+      "factor_max": 1.018
+    },
+    {
+      "date": "2020-08-28",
+      "img": "risk_20200828.webp",
+      "bin": "risk_level_20200828.bin",
+      "mean": 0.3281,
+      "median": 0.3066,
+      "p90": 0.58,
+      "max": 0.9845,
+      "area_high_km2": 650.6,
+      "area_extreme_km2": 217.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9845
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.0,
+        "WH03": 0.2,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 32.7,
+      "factor_min": 1.0,
+      "factor_max": 1.01
+    },
+    {
+      "date": "2020-08-29",
+      "img": "risk_20200829.webp",
+      "bin": "risk_level_20200829.bin",
+      "mean": 0.3268,
+      "median": 0.3053,
+      "p90": 0.5779,
+      "max": 0.984,
+      "area_high_km2": 637.6,
+      "area_extreme_km2": 212.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 29.4,
+      "factor_min": 1.0,
+      "factor_max": 1.003
+    },
+    {
+      "date": "2020-08-30",
+      "img": "risk_20200830.webp",
+      "bin": "risk_level_20200830.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 26.5,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-08-31",
+      "img": "risk_20200831.webp",
+      "bin": "risk_level_20200831.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.2
+      },
+      "api_mean": 23.9,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-01",
+      "img": "risk_20200901.webp",
+      "bin": "risk_level_20200901.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 21.5,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-02",
+      "img": "risk_20200902.webp",
+      "bin": "risk_level_20200902.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 19.3,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-03",
+      "img": "risk_20200903.webp",
+      "bin": "risk_level_20200903.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 17.4,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-04",
+      "img": "risk_20200904.webp",
+      "bin": "risk_level_20200904.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.3,
+        "WH03": 0.1,
+        "WH04": 0.0,
+        "WH05": 0.6
+      },
+      "api_mean": 15.9,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-05",
+      "img": "risk_20200905.webp",
+      "bin": "risk_level_20200905.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 14.3,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-06",
+      "img": "risk_20200906.webp",
+      "bin": "risk_level_20200906.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.1,
+        "WH03": 0.5,
+        "WH04": 0.0,
+        "WH05": 0.1
+      },
+      "api_mean": 13.0,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-07",
+      "img": "risk_20200907.webp",
+      "bin": "risk_level_20200907.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.2
+      },
+      "api_mean": 11.7,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-08",
+      "img": "risk_20200908.webp",
+      "bin": "risk_level_20200908.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 10.6,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-09",
+      "img": "risk_20200909.webp",
+      "bin": "risk_level_20200909.bin",
+      "mean": 0.3267,
+      "median": 0.3052,
+      "p90": 0.5778,
+      "max": 0.984,
+      "area_high_km2": 636.9,
+      "area_extreme_km2": 212.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.984
+      },
+      "rain_mm": {
+        "WH01": 0.1,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 9.5,
+      "factor_min": 1.0,
+      "factor_max": 1.0
+    },
+    {
+      "date": "2020-09-10",
+      "img": "risk_20200910.webp",
+      "bin": "risk_level_20200910.bin",
+      "mean": 0.333,
+      "median": 0.3118,
+      "p90": 0.5875,
+      "max": 0.9857,
+      "area_high_km2": 693.9,
+      "area_extreme_km2": 233.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9857
+      },
+      "rain_mm": {
+        "WH01": 42.2,
+        "WH02": 33.5,
+        "WH03": 32.9,
+        "WH04": 30.5,
+        "WH05": 31.1
+      },
+      "api_mean": 42.6,
+      "factor_min": 1.019,
+      "factor_max": 1.045
+    },
+    {
+      "date": "2020-09-11",
+      "img": "risk_20200911.webp",
+      "bin": "risk_level_20200911.bin",
+      "mean": 0.3309,
+      "median": 0.3096,
+      "p90": 0.5843,
+      "max": 0.9852,
+      "area_high_km2": 675.7,
+      "area_extreme_km2": 226.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9852
+      },
+      "rain_mm": {
+        "WH01": 0.2,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 38.4,
+      "factor_min": 1.011,
+      "factor_max": 1.034
+    },
+    {
+      "date": "2020-09-12",
+      "img": "risk_20200912.webp",
+      "bin": "risk_level_20200912.bin",
+      "mean": 0.3292,
+      "median": 0.3078,
+      "p90": 0.5818,
+      "max": 0.9847,
+      "area_high_km2": 660.8,
+      "area_extreme_km2": 220.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9847
+      },
+      "rain_mm": {
+        "WH01": 0.3,
+        "WH02": 0.6,
+        "WH03": 0.1,
+        "WH04": 1.8,
+        "WH05": 0.0
+      },
+      "api_mean": 35.1,
+      "factor_min": 1.003,
+      "factor_max": 1.025
+    },
+    {
+      "date": "2020-09-13",
+      "img": "risk_20200913.webp",
+      "bin": "risk_level_20200913.bin",
+      "mean": 0.33,
+      "median": 0.3086,
+      "p90": 0.5832,
+      "max": 0.985,
+      "area_high_km2": 668.8,
+      "area_extreme_km2": 223.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.985
+      },
+      "rain_mm": {
+        "WH01": 5.0,
+        "WH02": 6.3,
+        "WH03": 6.1,
+        "WH04": 7.6,
+        "WH05": 0.7
+      },
+      "api_mean": 36.7,
+      "factor_min": 1.0,
+      "factor_max": 1.027
+    },
+    {
+      "date": "2020-09-14",
+      "img": "risk_20200914.webp",
+      "bin": "risk_level_20200914.bin",
+      "mean": 0.3311,
+      "median": 0.3097,
+      "p90": 0.5847,
+      "max": 0.9853,
+      "area_high_km2": 677.8,
+      "area_extreme_km2": 227.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9853
+      },
+      "rain_mm": {
+        "WH01": 4.6,
+        "WH02": 5.7,
+        "WH03": 6.0,
+        "WH04": 6.7,
+        "WH05": 5.6
+      },
+      "api_mean": 38.8,
+      "factor_min": 1.004,
+      "factor_max": 1.028
+    },
+    {
+      "date": "2020-09-15",
+      "img": "risk_20200915.webp",
+      "bin": "risk_level_20200915.bin",
+      "mean": 0.3375,
+      "median": 0.3166,
+      "p90": 0.5943,
+      "max": 0.9868,
+      "area_high_km2": 732.2,
+      "area_extreme_km2": 251.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9868
+      },
+      "rain_mm": {
+        "WH01": 15.8,
+        "WH02": 18.2,
+        "WH03": 14.3,
+        "WH04": 18.9,
+        "WH05": 16.7
+      },
+      "api_mean": 51.7,
+      "factor_min": 1.032,
+      "factor_max": 1.054
+    },
+    {
+      "date": "2020-09-16",
+      "img": "risk_20200916.webp",
+      "bin": "risk_level_20200916.bin",
+      "mean": 0.348,
+      "median": 0.3276,
+      "p90": 0.6106,
+      "max": 0.9893,
+      "area_high_km2": 815.6,
+      "area_extreme_km2": 301.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9893
+      },
+      "rain_mm": {
+        "WH01": 23.6,
+        "WH02": 26.5,
+        "WH03": 31.7,
+        "WH04": 38.5,
+        "WH05": 13.3
+      },
+      "api_mean": 73.2,
+      "factor_min": 1.051,
+      "factor_max": 1.125
+    },
+    {
+      "date": "2020-09-17",
+      "img": "risk_20200917.webp",
+      "bin": "risk_level_20200917.bin",
+      "mean": 0.3568,
+      "median": 0.3371,
+      "p90": 0.624,
+      "max": 0.991,
+      "area_high_km2": 874.0,
+      "area_extreme_km2": 353.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.991
+      },
+      "rain_mm": {
+        "WH01": 25.8,
+        "WH02": 28.4,
+        "WH03": 26.4,
+        "WH04": 34.0,
+        "WH05": 15.3
+      },
+      "api_mean": 91.9,
+      "factor_min": 1.072,
+      "factor_max": 1.178
+    },
+    {
+      "date": "2020-09-18",
+      "img": "risk_20200918.webp",
+      "bin": "risk_level_20200918.bin",
+      "mean": 0.3524,
+      "median": 0.3324,
+      "p90": 0.6175,
+      "max": 0.9902,
+      "area_high_km2": 846.6,
+      "area_extreme_km2": 326.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9902
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 82.7,
+      "factor_min": 1.059,
+      "factor_max": 1.154
+    },
+    {
+      "date": "2020-09-19",
+      "img": "risk_20200919.webp",
+      "bin": "risk_level_20200919.bin",
+      "mean": 0.3491,
+      "median": 0.3288,
+      "p90": 0.6125,
+      "max": 0.9896,
+      "area_high_km2": 823.7,
+      "area_extreme_km2": 307.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9896
+      },
+      "rain_mm": {
+        "WH01": 1.6,
+        "WH02": 1.0,
+        "WH03": 0.9,
+        "WH04": 2.1,
+        "WH05": 1.0
+      },
+      "api_mean": 75.8,
+      "factor_min": 1.048,
+      "factor_max": 1.137
+    },
+    {
+      "date": "2020-09-20",
+      "img": "risk_20200920.webp",
+      "bin": "risk_level_20200920.bin",
+      "mean": 0.3571,
+      "median": 0.3375,
+      "p90": 0.6241,
+      "max": 0.991,
+      "area_high_km2": 875.6,
+      "area_extreme_km2": 353.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.991
+      },
+      "rain_mm": {
+        "WH01": 25.5,
+        "WH02": 28.8,
+        "WH03": 22.9,
+        "WH04": 21.1,
+        "WH05": 23.5
+      },
+      "api_mean": 92.5,
+      "factor_min": 1.087,
+      "factor_max": 1.161
+    },
+    {
+      "date": "2020-09-21",
+      "img": "risk_20200921.webp",
+      "bin": "risk_level_20200921.bin",
+      "mean": 0.3577,
+      "median": 0.3381,
+      "p90": 0.6242,
+      "max": 0.9909,
+      "area_high_km2": 877.0,
+      "area_extreme_km2": 354.8,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9909
+      },
+      "rain_mm": {
+        "WH01": 8.0,
+        "WH02": 8.0,
+        "WH03": 7.9,
+        "WH04": 8.1,
+        "WH05": 17.9
+      },
+      "api_mean": 93.3,
+      "factor_min": 1.11,
+      "factor_max": 1.156
+    },
+    {
+      "date": "2020-09-22",
+      "img": "risk_20200922.webp",
+      "bin": "risk_level_20200922.bin",
+      "mean": 0.3603,
+      "median": 0.341,
+      "p90": 0.6279,
+      "max": 0.9913,
+      "area_high_km2": 892.9,
+      "area_extreme_km2": 370.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9913
+      },
+      "rain_mm": {
+        "WH01": 13.7,
+        "WH02": 14.1,
+        "WH03": 14.3,
+        "WH04": 14.5,
+        "WH05": 16.8
+      },
+      "api_mean": 98.6,
+      "factor_min": 1.129,
+      "factor_max": 1.165
+    },
+    {
+      "date": "2020-09-23",
+      "img": "risk_20200923.webp",
+      "bin": "risk_level_20200923.bin",
+      "mean": 0.3562,
+      "median": 0.3366,
+      "p90": 0.622,
+      "max": 0.9906,
+      "area_high_km2": 867.9,
+      "area_extreme_km2": 345.2,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9906
+      },
+      "rain_mm": {
+        "WH01": 0.9,
+        "WH02": 1.3,
+        "WH03": 1.2,
+        "WH04": 2.4,
+        "WH05": 0.5
+      },
+      "api_mean": 90.0,
+      "factor_min": 1.11,
+      "factor_max": 1.147
+    },
+    {
+      "date": "2020-09-24",
+      "img": "risk_20200924.webp",
+      "bin": "risk_level_20200924.bin",
+      "mean": 0.3519,
+      "median": 0.3319,
+      "p90": 0.6156,
+      "max": 0.9898,
+      "area_high_km2": 840.0,
+      "area_extreme_km2": 320.0,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9898
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.0,
+        "WH05": 0.0
+      },
+      "api_mean": 81.0,
+      "factor_min": 1.093,
+      "factor_max": 1.126
+    },
+    {
+      "date": "2020-09-25",
+      "img": "risk_20200925.webp",
+      "bin": "risk_level_20200925.bin",
+      "mean": 0.3485,
+      "median": 0.3283,
+      "p90": 0.6107,
+      "max": 0.9892,
+      "area_high_km2": 816.9,
+      "area_extreme_km2": 301.7,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9892
+      },
+      "rain_mm": {
+        "WH01": 0.5,
+        "WH02": 0.8,
+        "WH03": 1.4,
+        "WH04": 2.4,
+        "WH05": 0.1
+      },
+      "api_mean": 74.0,
+      "factor_min": 1.077,
+      "factor_max": 1.112
+    },
+    {
+      "date": "2020-09-26",
+      "img": "risk_20200926.webp",
+      "bin": "risk_level_20200926.bin",
+      "mean": 0.3455,
+      "median": 0.3251,
+      "p90": 0.6062,
+      "max": 0.9885,
+      "area_high_km2": 794.8,
+      "area_extreme_km2": 286.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9885
+      },
+      "rain_mm": {
+        "WH01": 0.9,
+        "WH02": 1.4,
+        "WH03": 1.1,
+        "WH04": 1.2,
+        "WH05": 1.5
+      },
+      "api_mean": 67.8,
+      "factor_min": 1.067,
+      "factor_max": 1.097
+    },
+    {
+      "date": "2020-09-27",
+      "img": "risk_20200927.webp",
+      "bin": "risk_level_20200927.bin",
+      "mean": 0.3423,
+      "median": 0.3216,
+      "p90": 0.6014,
+      "max": 0.9879,
+      "area_high_km2": 769.7,
+      "area_extreme_km2": 271.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9879
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.1,
+        "WH04": 0.5,
+        "WH05": 0.2
+      },
+      "api_mean": 61.2,
+      "factor_min": 1.054,
+      "factor_max": 1.082
+    },
+    {
+      "date": "2020-09-28",
+      "img": "risk_20200928.webp",
+      "bin": "risk_level_20200928.bin",
+      "mean": 0.3396,
+      "median": 0.3188,
+      "p90": 0.5972,
+      "max": 0.9872,
+      "area_high_km2": 747.7,
+      "area_extreme_km2": 259.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9872
+      },
+      "rain_mm": {
+        "WH01": 0.2,
+        "WH02": 0.0,
+        "WH03": 0.2,
+        "WH04": 0.4,
+        "WH05": 2.0
+      },
+      "api_mean": 55.6,
+      "factor_min": 1.046,
+      "factor_max": 1.068
+    },
+    {
+      "date": "2020-09-29",
+      "img": "risk_20200929.webp",
+      "bin": "risk_level_20200929.bin",
+      "mean": 0.3398,
+      "median": 0.319,
+      "p90": 0.5977,
+      "max": 0.9873,
+      "area_high_km2": 750.3,
+      "area_extreme_km2": 260.6,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9873
+      },
+      "rain_mm": {
+        "WH01": 6.0,
+        "WH02": 6.8,
+        "WH03": 7.7,
+        "WH04": 6.7,
+        "WH05": 3.2
+      },
+      "api_mean": 56.1,
+      "factor_min": 1.042,
+      "factor_max": 1.069
+    },
+    {
+      "date": "2020-09-30",
+      "img": "risk_20200930.webp",
+      "bin": "risk_level_20200930.bin",
+      "mean": 0.337,
+      "median": 0.316,
+      "p90": 0.5935,
+      "max": 0.9867,
+      "area_high_km2": 727.6,
+      "area_extreme_km2": 249.1,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9867
+      },
+      "rain_mm": {
+        "WH01": 0.0,
+        "WH02": 0.0,
+        "WH03": 0.0,
+        "WH04": 0.1,
+        "WH05": 0.0
+      },
+      "api_mean": 50.5,
+      "factor_min": 1.032,
+      "factor_max": 1.056
     }
   ]
 }

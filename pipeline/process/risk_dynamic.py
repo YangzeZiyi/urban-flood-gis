@@ -17,7 +17,7 @@
                           ↓
       combine：动态风险 = 静态地形易涝性 × 降雨放大（0~1）
                           ↓
-   每时段一个文件（.bin 等级 + .png 贴图）+ 一份 risk_timeline.json
+   每时段一个文件（.bin 等级 + .webp 贴图）+ 一份 risk_timeline.json
 
 为什么要有"动态"这一层？
     静态指数回答"哪里天生容易积水"，这个答案几年不变，一张图就够。
@@ -32,7 +32,7 @@
     光索引就几十 GB，前端每刷一次还要扫表聚合——数据库不干这个。
     正确做法是"栅格进文件、索引进 JSON"：
       - risk_level_YYYYMMDD.bin   uint8 等级，22 MB/帧，后端 seek 一次取一格
-      - risk_YYYYMMDD.png         RGBA 贴图，GPU 只画一个四边形
+      - risk_YYYYMMDD.webp        RGBA 贴图，GPU 只画一个四边形
       - risk_timeline.json        所有帧的统计量 + 几何 + 分级阈值
     前端只读 manifest 就能播时间轴，不连数据库。这一层表保持为空是设计，不是遗漏。
 
@@ -68,7 +68,7 @@ OUT_DIR = PROJECT_DIR / "data" / "processed" / "risk"
 OUT_DIR.mkdir(parents=True, exist_ok=True)          # 首次跑自动建目录
 
 # 前端能直接访问的目录：Vite 把 public/ 原样挂在网站根路径下，
-# 所以 frontend/public/risk/x.png 在浏览器里就是 http://localhost:5173/risk/x.png。
+# 所以 frontend/public/risk/x.webp 在浏览器里就是 http://127.0.0.1:5173/risk/x.webp。
 # 注意 data/processed/ 不在 public/ 里，前端根本读不到——必须复制过去。
 FRONTEND_RISK_DIR = PROJECT_DIR / "frontend" / "public" / "risk"
 
@@ -639,15 +639,23 @@ def wgs84_geometry() -> tuple[int, int, object]:
 
 def export_snapshot(day: str, risk: np.ndarray, index_base: np.ndarray,
                     levels: list[tuple]) -> dict:
-    """把一个时段的风险面写成 .bin + .png，返回该时段的汇总 dict。
+    """把一个时段的风险面写成 .bin + 贴图，返回该时段的汇总 dict。
 
     产物（都在 data/processed/risk/）：
         risk_level_20200706.bin   uint8，0~4 是等级，255 无数据，行优先、无头
-        risk_20200706.png         4440×5162 RGBA 贴图，无数据处 alpha=0
+        risk_20200706.webp        1656×1671 RGBA 贴图，无数据处 alpha=0
 
-    为什么等级另存一份 bin，不直接从 png 反查颜色？
-        png 有损（降到 8 位、抗锯齿、浏览器缩放），颜色一改，反查表就失效；
-        bin 是无损的整数，后端点击查询 seek 一次就拿到等级，和 png 外观解耦。
+    为什么等级另存一份 bin，不直接从贴图反查颜色？
+        WebP 有损（降到 8 位、抗锯齿、浏览器缩放），颜色一改，反查表就失效；
+        bin 是无损的整数，后端点击查询 seek 一次就拿到等级，和贴图外观解耦。
+
+    为什么贴图用 WebP 而不是 PNG？
+        同一帧，PNG-32 是 653 KB，WebP 无损是 235 KB（2.8 倍）。
+        实测 alpha 通道逐位相同、可见像素 RGB 逐位相同，
+        只有 alpha=0 那些像素的 RGB 变了——那部分根本不显示，无所谓。
+        153 天的汛期回放，这一项把总量从约 99 MB 压到 34.7 MB（平均 219 KB/帧）。
+        选无损不选有损：有损反而更大（q90 是 723 KB），因为这张图只有
+        6 种颜色、边界极碎，DCT 变换在这类图上毫无优势。
     """
     from PIL import Image
 
@@ -665,6 +673,7 @@ def export_snapshot(day: str, risk: np.ndarray, index_base: np.ndarray,
     for edge in edges:
         lvl += (risk >= edge)                           # NaN 比较为 False，落在 0 档
     lvl[~valid] = 255                                   # 255 = 无数据（水体/市域外）
+
 
     # ---- 导出前重采样到 EPSG:4326 ----
     # 分工必须清楚：
@@ -688,7 +697,7 @@ def export_snapshot(day: str, risk: np.ndarray, index_base: np.ndarray,
 
     tag = day.replace("-", "")
     bin_path = OUT_DIR / f"risk_level_{tag}.bin"
-    png_path = OUT_DIR / f"risk_{tag}.png"
+    img_path = OUT_DIR / f"risk_{tag}.webp"
     lvl_w.tofile(bin_path)
 
     rgba = np.zeros((oh, ow, 4), dtype=np.uint8)
@@ -699,7 +708,12 @@ def export_snapshot(day: str, risk: np.ndarray, index_base: np.ndarray,
         rgba[m, 1] = g_c
         rgba[m, 2] = b_c
         rgba[m, 3] = LEVEL_ALPHA[i]
-    Image.fromarray(rgba, mode="RGBA").save(png_path, optimize=True)
+    # method 选 4 不选 6：实测同 3 帧上 4 和 6 的平均体积**完全一样**（218.9 KB），
+    # 但 6 是 5.18 秒/帧、4 是 0.31 秒/帧。153 帧的差距是 16 分钟 vs 47 秒，
+    # 而省下的字节数一个都没有——无损 WebP 的压缩档次对这类"少量颜色 + 碎边界"
+    # 的图没有任何区别，别迷信"越高越好"。
+    Image.fromarray(rgba, mode="RGBA").save(
+        img_path, format="WEBP", lossless=True, quality=100, method=4)
 
     # ---- 统计（只在有效像元上算，NaN 不参与） ----
     v = risk[valid]
@@ -715,7 +729,7 @@ def export_snapshot(day: str, risk: np.ndarray, index_base: np.ndarray,
 
     return {
         "date": day,
-        "png": png_path.name,
+        "img": img_path.name,
         "bin": bin_path.name,
         "mean": round(float(v.mean()), 4),
         "median": round(float(np.median(v)), 4),
@@ -739,20 +753,22 @@ def show(path: Path) -> str:
 
 
 def publish_frontend(items: list[dict]) -> float:
-    """把前端要用的 PNG + manifest 复制到 frontend/public/risk/，返回总字节数。
+    """把前端要用的贴图 + manifest 复制到 frontend/public/risk/，返回总字节数。
 
-    为什么只复制 PNG 和 JSON，不复制 .bin？
-        .bin 是给后端"按经纬度查一格"用的（每帧 2.7 MB，7 帧 19 MB），
+    为什么只复制贴图和 JSON，不复制 .bin？
+        .bin 是给后端"按经纬度查一格"用的（每帧 2.7 MB，153 帧 415 MB），
         前端这一版一张都不需要。塞进 public/ 只会拖慢 git 和构建，
         而且它天生属于"服务端资源"，放公开目录等于谁都能下载。
         哪天要在浏览器里做逐像元统计，再单独发布一次，别顺带。
 
-    为什么复制前要先删旧的 risk_*.png？
-        换了 --start/--end 之后帧数会变（7 帧变 3 帧、或换了年份），
-        不清理就会残留上一批 risk_2020071X.png——新 manifest 里没有它们，
+    为什么复制前要先删旧的贴图？
+        换了 --start/--end 之后帧数会变（153 帧变 7 帧、或换了年份），
+        不清理就会残留上一批 risk_2020071X.webp——新 manifest 里没有它们，
         前端不会去读，但目录里会攒一堆谁都不认识的死文件，
         过半年没人敢删（"万一还有用呢"）。目录带自动清扫，就不需要考古。
-        只删 risk_*.png，不 rm -rf 整个目录：那个目录里将来可能还有别的产物。
+        用 risk_*.* 而不是 risk_*.png：这个项目从 PNG 换成 WebP 换过一次，
+        按旧后缀删会漏掉新后缀的文件，两种都留下。
+        仍然只删 risk_ 开头的，不 rm -rf 整个目录：将来可能还有别的产物。
 
     为什么是复制而不是软链接/直接让 Vite 指向 data/？
         软链接在 Windows 上要管理员权限（mklink），换台机器就崩；
@@ -761,13 +777,14 @@ def publish_frontend(items: list[dict]) -> float:
         几十 MB 的复制在这里是最省心、最不容易出错的方案。
     """
     FRONTEND_RISK_DIR.mkdir(parents=True, exist_ok=True)
-    for old in FRONTEND_RISK_DIR.glob("risk_*.png"):
+    for old in list(FRONTEND_RISK_DIR.glob("risk_*.png")) + \
+            list(FRONTEND_RISK_DIR.glob("risk_*.webp")):
         old.unlink()
 
     total = 0
     for it in items:
-        dst = FRONTEND_RISK_DIR / it["png"]
-        shutil.copy2(OUT_DIR / it["png"], dst)       # copy2 连 mtime 一起带过去
+        dst = FRONTEND_RISK_DIR / it["img"]
+        shutil.copy2(OUT_DIR / it["img"], dst)       # copy2 连 mtime 一起带过去
         total += dst.stat().st_size
 
     manifest = OUT_DIR / "risk_timeline.json"
@@ -797,7 +814,7 @@ def write_manifest(items: list[dict]) -> Path:
         "desc": "静态地形易涝指数 × 降雨强度放大系数（逐日）",
         "bbox_wgs84": geom["bbox_wgs84"],
         "bbox_order": "west, south, east, north",
-        # 这两个数字描述的是**导出网格**（png / bin），别和下面的 stat_grid 混。
+        # 这两个数字描述的是**导出网格**（贴图 / bin），别和下面的 stat_grid 混。
         "width": ow,
         "height": oh,
         "res_deg": round(float(CLICK_RES_DEG), 8),
@@ -959,7 +976,7 @@ def main() -> None:
     print("=" * 78)
     print("第 6 步：发布到前端")
     print("=" * 78)
-    # 只发 png + json；.bin 留在 data/processed/risk/ 给后端用（见 publish_frontend）
+    # 只发贴图 + json；.bin 留在 data/processed/risk/ 给后端用（见 publish_frontend）
     publish_frontend(items)
 
     print()
