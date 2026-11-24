@@ -46,6 +46,7 @@
 """
 import argparse
 import json
+import shutil
 import sys
 import time
 from datetime import date, timedelta
@@ -65,6 +66,11 @@ PROJECT_DIR = THIS.parents[2]
 DEM_DIR = PROJECT_DIR / "data" / "processed" / "dem"
 OUT_DIR = PROJECT_DIR / "data" / "processed" / "risk"
 OUT_DIR.mkdir(parents=True, exist_ok=True)          # 首次跑自动建目录
+
+# 前端能直接访问的目录：Vite 把 public/ 原样挂在网站根路径下，
+# 所以 frontend/public/risk/x.png 在浏览器里就是 http://localhost:5173/risk/x.png。
+# 注意 data/processed/ 不在 public/ 里，前端根本读不到——必须复制过去。
+FRONTEND_RISK_DIR = PROJECT_DIR / "frontend" / "public" / "risk"
 
 ENV_FILE = PIPELINE_DIR / ".env"
 INDEX_NPY = DEM_DIR / "wuhan_flood_index.npy"      # M3 静态指数（NaN=水体/市域外）
@@ -732,6 +738,47 @@ def show(path: Path) -> str:
         return str(path)
 
 
+def publish_frontend(items: list[dict]) -> float:
+    """把前端要用的 PNG + manifest 复制到 frontend/public/risk/，返回总字节数。
+
+    为什么只复制 PNG 和 JSON，不复制 .bin？
+        .bin 是给后端"按经纬度查一格"用的（每帧 2.7 MB，7 帧 19 MB），
+        前端这一版一张都不需要。塞进 public/ 只会拖慢 git 和构建，
+        而且它天生属于"服务端资源"，放公开目录等于谁都能下载。
+        哪天要在浏览器里做逐像元统计，再单独发布一次，别顺带。
+
+    为什么复制前要先删旧的 risk_*.png？
+        换了 --start/--end 之后帧数会变（7 帧变 3 帧、或换了年份），
+        不清理就会残留上一批 risk_2020071X.png——新 manifest 里没有它们，
+        前端不会去读，但目录里会攒一堆谁都不认识的死文件，
+        过半年没人敢删（"万一还有用呢"）。目录带自动清扫，就不需要考古。
+        只删 risk_*.png，不 rm -rf 整个目录：那个目录里将来可能还有别的产物。
+
+    为什么是复制而不是软链接/直接让 Vite 指向 data/？
+        软链接在 Windows 上要管理员权限（mklink），换台机器就崩；
+        改 Vite 的 publicDir 又会把整个 data/processed/ 暴露成静态资源
+        （里面有 92 MB 的 .npy 和 2.9 GB 的 DEM，全给你打包）。
+        几十 MB 的复制在这里是最省心、最不容易出错的方案。
+    """
+    FRONTEND_RISK_DIR.mkdir(parents=True, exist_ok=True)
+    for old in FRONTEND_RISK_DIR.glob("risk_*.png"):
+        old.unlink()
+
+    total = 0
+    for it in items:
+        dst = FRONTEND_RISK_DIR / it["png"]
+        shutil.copy2(OUT_DIR / it["png"], dst)       # copy2 连 mtime 一起带过去
+        total += dst.stat().st_size
+
+    manifest = OUT_DIR / "risk_timeline.json"
+    dst_json = FRONTEND_RISK_DIR / manifest.name
+    shutil.copy2(manifest, dst_json)
+    total += dst_json.stat().st_size
+
+    print(f"  已发布 {len(items)} 帧到 {show(FRONTEND_RISK_DIR)}/（{total / 1e6:.1f} MB）")
+    return float(total)
+
+
 def write_manifest(items: list[dict]) -> Path:
     """写 risk_timeline.json —— 前端的单一数据源。
 
@@ -907,6 +954,13 @@ def main() -> None:
         print(f"{it['date']:<12}{mm_day:>10,.1f}{it['api_mean']:>10,.1f}"
               f"{rng:>14}{it['mean']:>11.4f}{it['area_high_km2']:>12,.1f}"
               f"{it['area_extreme_km2']:>11,.1f}")
+
+    print()
+    print("=" * 78)
+    print("第 6 步：发布到前端")
+    print("=" * 78)
+    # 只发 png + json；.bin 留在 data/processed/risk/ 给后端用（见 publish_frontend）
+    publish_frontend(items)
 
     print()
     print("=" * 78)

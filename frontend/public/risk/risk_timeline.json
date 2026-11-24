@@ -1,0 +1,258 @@
+{
+  "generated_at": "2026-11-24 19:52:18",
+  "layer": "dynamic_risk",
+  "desc": "静态地形易涝指数 × 降雨强度放大系数（逐日）",
+  "bbox_wgs84": [
+    113.702281,
+    29.969132,
+    115.082378,
+    31.36126
+  ],
+  "bbox_order": "west, south, east, north",
+  "width": 1656,
+  "height": 1671,
+  "res_deg": 0.00083333,
+  "crs": "EPSG:4326（等经纬度网格，与静态贴图、点击查询同源）",
+  "stat_grid": {
+    "width": 4440,
+    "height": 5162,
+    "cell_m": 30.0,
+    "note": "均值/分位/面积都在 30 m 原网格上统计（CELL_KM2 严格等于 900 m²）；导出网格约 90 m，仅用于展示与点击。两套口径不可混用。"
+  },
+  "level_file": "uint8, row-major, 无头, 0~4 等级, 255 无数据",
+  "fixed_levels": "阈值取自静态指数，跨帧固定，便于比较不同日期的红区面积",
+  "levels": [
+    {
+      "name": "低",
+      "lo": 0.0,
+      "hi": 0.2481,
+      "color": "#2f81f7"
+    },
+    {
+      "name": "较低",
+      "lo": 0.2481,
+      "hi": 0.3761,
+      "color": "#3fb950"
+    },
+    {
+      "name": "中",
+      "lo": 0.3761,
+      "hi": 0.5593,
+      "color": "#d29922"
+    },
+    {
+      "name": "高",
+      "lo": 0.5593,
+      "hi": 0.6849,
+      "color": "#f0883e"
+    },
+    {
+      "name": "极高",
+      "lo": 0.6849,
+      "hi": 1.001,
+      "color": "#f85149"
+    }
+  ],
+  "api_decay": 0.9,
+  "api_dry_max": 30.0,
+  "api_wet_min": 500.0,
+  "factor_max": 2.0,
+  "frames": [
+    {
+      "date": "2020-07-04",
+      "png": "risk_20200704.png",
+      "bin": "risk_level_20200704.bin",
+      "mean": 0.3942,
+      "median": 0.3781,
+      "p90": 0.677,
+      "max": 0.9957,
+      "area_high_km2": 1024.7,
+      "area_extreme_km2": 651.9,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9957
+      },
+      "rain_mm": {
+        "WH01": 42.9,
+        "WH02": 60.3,
+        "WH03": 58.9,
+        "WH04": 60.9,
+        "WH05": 26.8
+      },
+      "api_mean": 174.8,
+      "factor_min": 1.247,
+      "factor_max": 1.336
+    },
+    {
+      "date": "2020-07-05",
+      "png": "risk_20200705.png",
+      "bin": "risk_level_20200705.bin",
+      "mean": 0.4355,
+      "median": 0.4252,
+      "p90": 0.736,
+      "max": 0.9985,
+      "area_high_km2": 1000.8,
+      "area_extreme_km2": 1114.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9985
+      },
+      "rain_mm": {
+        "WH01": 124.5,
+        "WH02": 147.1,
+        "WH03": 144.7,
+        "WH04": 167.2,
+        "WH05": 30.4
+      },
+      "api_mean": 280.1,
+      "factor_min": 1.28,
+      "factor_max": 1.63
+    },
+    {
+      "date": "2020-07-06",
+      "png": "risk_20200706.png",
+      "bin": "risk_level_20200706.bin",
+      "mean": 0.4845,
+      "median": 0.4833,
+      "p90": 0.797,
+      "max": 0.9996,
+      "area_high_km2": 961.7,
+      "area_extreme_km2": 1651.1,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9996
+      },
+      "rain_mm": {
+        "WH01": 157.6,
+        "WH02": 194.0,
+        "WH03": 189.8,
+        "WH04": 203.0,
+        "WH05": 94.9
+      },
+      "api_mean": 420.0,
+      "factor_min": 1.448,
+      "factor_max": 1.992
+    },
+    {
+      "date": "2020-07-07",
+      "png": "risk_20200707.png",
+      "bin": "risk_level_20200707.bin",
+      "mean": 0.507,
+      "median": 0.5093,
+      "p90": 0.8179,
+      "max": 0.9997,
+      "area_high_km2": 1012.2,
+      "area_extreme_km2": 1862.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9997
+      },
+      "rain_mm": {
+        "WH01": 108.9,
+        "WH02": 101.6,
+        "WH03": 94.8,
+        "WH04": 84.7,
+        "WH05": 171.7
+      },
+      "api_mean": 490.3,
+      "factor_min": 1.762,
+      "factor_max": 2.0
+    },
+    {
+      "date": "2020-07-08",
+      "png": "risk_20200708.png",
+      "bin": "risk_level_20200708.bin",
+      "mean": 0.4952,
+      "median": 0.4951,
+      "p90": 0.8049,
+      "max": 0.9996,
+      "area_high_km2": 969.7,
+      "area_extreme_km2": 1743.4,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9996
+      },
+      "rain_mm": {
+        "WH01": 4.8,
+        "WH02": 6.8,
+        "WH03": 4.8,
+        "WH04": 7.2,
+        "WH05": 3.3
+      },
+      "api_mean": 446.7,
+      "factor_min": 1.686,
+      "factor_max": 1.969
+    },
+    {
+      "date": "2020-07-09",
+      "png": "risk_20200709.png",
+      "bin": "risk_level_20200709.bin",
+      "mean": 0.4807,
+      "median": 0.4777,
+      "p90": 0.7883,
+      "max": 0.9995,
+      "area_high_km2": 975.5,
+      "area_extreme_km2": 1590.3,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9995
+      },
+      "rain_mm": {
+        "WH01": 0.5,
+        "WH02": 0.4,
+        "WH03": 0.7,
+        "WH04": 0.3,
+        "WH05": 0.7
+      },
+      "api_mean": 402.5,
+      "factor_min": 1.613,
+      "factor_max": 1.867
+    },
+    {
+      "date": "2020-07-10",
+      "png": "risk_20200710.png",
+      "bin": "risk_level_20200710.bin",
+      "mean": 0.4693,
+      "median": 0.4642,
+      "p90": 0.7744,
+      "max": 0.9993,
+      "area_high_km2": 979.4,
+      "area_extreme_km2": 1464.5,
+      "cells": 7863040,
+      "no_data": 15056240,
+      "top_cell": {
+        "lon": 113.99459,
+        "lat": 30.48275,
+        "value": 0.9993
+      },
+      "rain_mm": {
+        "WH01": 4.0,
+        "WH02": 6.0,
+        "WH03": 3.4,
+        "WH04": 4.1,
+        "WH05": 15.2
+      },
+      "api_mean": 368.8,
+      "factor_min": 1.578,
+      "factor_max": 1.782
+    }
+  ]
+}

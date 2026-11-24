@@ -8,7 +8,7 @@
  * <script setup> 是 Vue 3 的语法糖：里面定义的变量、函数、导入的组件，
  * 模板里都能直接用，不用 return、不用注册。
  */
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as Cesium from 'cesium'
 
 // ref(值) 创建一个"响应式引用"。DOM 元素绑定到它之后，
@@ -28,7 +28,28 @@ const HOME = { lon: 114.305, lat: 30.593, height: 26000 }
 let overlayLayer = null
 const legend = ref([])        // [{ name, lo, hi, color }]，由 JSON 提供
 const legendFoot = ref('')    // 图例底部那行小字
-const overlayOn = ref(true)   // 图例上的勾选框
+const overlayOn = ref(true)   // 图例上的勾选框（= 用户"此刻"看到的静态贴图状态）
+let staticFoot = ''           // 静态图例底部那行原文，退出时间轴时要原样还回去
+let noteLayer = null          // 影像注记层（地名），必须永远压在最上面
+
+// 时间轴模式会把静态贴图强制关掉，但那是"临时让位"，不是用户改主意了。
+// 所以进入前先把用户的选择抄一份，退出时原样还回去——
+// 否则"我明明关了贴图，进一次时间轴出来它又自己开了"，用户会以为程序在乱动他的设置。
+let overlayBeforeTimeline = true
+
+// ---------------- 动态风险时间轴（M6） ----------------
+// 7 帧不是"每次换一个 url"，而是 7 个图层同时建好、只切换 show。
+// 换 url 要等网络、要重建 provider，拖动滑块时必然闪白；
+// 7 个图层常驻显存（每帧约 11 MB），换来的是拖动零延迟——这点内存很值。
+const timeline = ref(null)      // manifest，null = 还没加载完或加载失败
+const frameIdx = ref(0)         // 当前帧下标
+const playing = ref(false)      // 是否在自动播放
+const timelineOn = ref(false)   // 时间轴模式开关（打开时静态贴图让位）
+let riskLayers = []             // Cesium.ImageryLayer[]，与 frames 一一对应
+let playTimer = null            // setInterval 句柄，退出/卸载时必须清
+
+// 时间轴模式下把图例底部那句话换掉：它解释的是"为什么 7 张图的颜色能直接比大小"
+const TIMELINE_FOOT = '动态风险与静态图同一套分级阈值，红区面积可直接跨日期比较'
 
 // 点击查询的结果卡片。null = 不显示
 // 结构：{ status, lon, lat, index, level, color, elev, slope, acc, message, x, y }
@@ -98,9 +119,115 @@ function onKeyDown(e) {
  * 勾选框变化时调用：显隐整张贴图。
  * 为什么不用 computed 自动同步？因为 overlayLayer 是普通变量，
  * Vue 看不见它的变化，只能靠事件手动推一下。
+ *
+ * 为什么时间轴模式下直接 return？
+ *   模板上已经给了 :disabled，用户点不动；这里再拦一道是为了防"程序内调用"
+ *   （比如将来加个键盘快捷键、或者 console 里手动改）。一旦放行，静态图会被
+ *   show=true 垫到动态帧底下，而动态层 alpha 只有 0.85，最终颜色会变成
+ *   0.85×动态 + 0.15×静态——画面上那个颜色不再属于任何一天的数据。
  */
-function toggleOverlay() {
+function toggleOverlay(e) {
+  if (timelineOn.value) {
+    // 把 DOM 的勾选状态直接按回去。为什么不能只改 overlayOn？
+    //   v-model 会先在同一个事件里把模型置 true，我们再置回 false，
+    //   两次赋值发生在同一轮更新里，Vue 认为"值没变过"就不重渲染，
+    //   屏幕上会留下一个勾上的、但其实没生效的勾选框。
+    //   这种"显示假状态"比"点不动"更糟，所以 DOM 手动兜一下。
+    if (e && e.target) e.target.checked = false
+    overlayOn.value = false
+    return
+  }
   if (overlayLayer) overlayLayer.show = overlayOn.value
+}
+
+// ---------------- 时间轴：切帧 / 播放 / 开关 ----------------
+/**
+ * 只显示第 i 帧（其余 6 帧藏起来）。
+ *
+ * 为什么不 remove/add 图层？Cesium 删图层会销毁贴图，下次 add 又要重新
+ * 上传 11 MB 到 GPU，拖动滑块时屏幕上会闪一下白。
+ * 7 个图层全程挂在 imageryLayers 里，只是 show 开关不同——切帧是零成本的。
+ */
+function applyFrame(i) {
+  if (!riskLayers.length) return
+  const n = riskLayers.length
+  frameIdx.value = Math.max(0, Math.min(n - 1, i))
+  riskLayers.forEach((l, k) => {
+    l.show = timelineOn.value && k === frameIdx.value
+  })
+}
+
+/** 停掉自动播放。播放器、退出时间轴、组件卸载三个地方都要调它 */
+function stopPlay() {
+  playing.value = false
+  if (playTimer) {
+    clearInterval(playTimer)
+    playTimer = null
+  }
+}
+
+/** ▶ / ⏸：播放时每秒走一帧，走到最后回到第一帧循环，方便反复看雨怎么蔓延 */
+function togglePlay() {
+  if (playing.value) {
+    stopPlay()
+    return
+  }
+  if (!riskLayers.length) return
+  playing.value = true
+  playTimer = setInterval(() => {
+    applyFrame((frameIdx.value + 1) % riskLayers.length)
+  }, 1000)
+}
+
+/**
+ * 进入/退出时间轴模式。
+ *
+ * 开关的核心不是"多一个图层"，而是"两种图不能同时显示"：
+ * 静态图和动态图都是 0~1 的风险面，叠在一起是两张半透明图相加，
+ * 颜色会比任何一天都红，看的人会以为 7 月 6 日比实际更危险。
+ * 所以开时间轴就把静态图关掉（连勾选框一起改，避免界面自相矛盾）。
+ */
+function toggleTimeline() {
+  if (!timeline.value) {
+    console.warn('[时间轴] manifest 还没加载好，稍等一下或检查 /risk/risk_timeline.json')
+    return
+  }
+  timelineOn.value = !timelineOn.value
+  if (timelineOn.value) {
+    // 先记下用户此刻的选择，再强制关掉静态贴图让它让位
+    overlayBeforeTimeline = overlayOn.value
+    overlayOn.value = false
+    if (overlayLayer) overlayLayer.show = false
+    legendFoot.value = TIMELINE_FOOT
+    applyFrame(0)                 // 总是从第一天开始，避免停在上一轮的帧号
+  } else {
+    stopPlay()
+    riskLayers.forEach((l) => { l.show = false })
+    // 还回"进入时间轴之前"的状态，而不是写死 true：
+    // 用户要是本来就不想看贴图（只想看底图），退出后不该被强行打开
+    overlayOn.value = overlayBeforeTimeline
+    if (overlayLayer) overlayLayer.show = overlayBeforeTimeline
+    legendFoot.value = staticFoot // 原文还回去（加载失败时它就是空串，不会造出假数据）
+  }
+}
+
+/**
+ * 拖动滑块。用 input 而不是 change：change 要等松手才触发，
+ * 拖的时候图一动不动，完全没有"回放"的感觉。
+ * 拖动时如果正在播放，先暂停——否则手指和定时器抢着改帧号，图会跳着走。
+ */
+function onSlide(e) {
+  if (playing.value) stopPlay()
+  applyFrame(Number(e.target.value))
+}
+
+/** 当前帧对象。没有 manifest 时返回 null，模板里全部 v-if 兜住 */
+const curFrame = computed(() => timeline.value?.frames?.[frameIdx.value] ?? null)
+
+/** 面雨量：manifest 里是 5 个站各自的 mm，取平均当作"这一天的雨有多大" */
+function rainOf(f) {
+  const v = Object.values(f?.rain_mm ?? {})
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0
 }
 
 // ---------------- 天地图 key ----------------
@@ -240,6 +367,8 @@ onMounted(async () => {
       Object.entries(meta.weights)
         .map(([k, v]) => `${CN[k] ?? k}${v.toFixed(2)}`)
         .join(' / ')
+    // 原文存一份：切到时间轴时这行会被换成提示语，退出时要还回来
+    staticFoot = legendFoot.value
 
     console.log(`[贴图] ${meta.file} 已铺在 ${rectangle.west} ~ ${rectangle.east}`, meta.bbox_wgs84)
   } catch (err) {
@@ -250,7 +379,55 @@ onMounted(async () => {
   // ---------------- 叠加注记层 ----------------
   // 只有影像没有地名，看不出这里是哪儿。再叠一层"影像注记"，
   // 顺序很重要：后 add 的盖在上面，所以注记要放在底图之后
-  viewer.imageryLayers.addImageryProvider(tiandituLayer('cia', 'cia_w'))
+  noteLayer = viewer.imageryLayers.addImageryProvider(tiandituLayer('cia', 'cia_w'))
+
+  // ---------------- 加载动态风险时间轴（M6） ----------------
+  // 数据来源是 risk_dynamic.py 的最后一步：它把 7 张 png + manifest 复制到
+  // frontend/public/risk/，所以这里的路径就是 /risk/xxx（public 是网站根目录）。
+  //
+  // 三层都要守住：
+  //   1. 失败不能影响静态图：这段包在 try 里，axios 挂了页面照样能用
+  //   2. 7 个图层一次建完，默认全 show=false，等用户点"时间轴"再显示
+  //   3. 建完必须把注记层顶回最上面——否则地名会被半透明贴图糊住
+  try {
+    const tlResp = await fetch('/risk/risk_timeline.json')
+    if (!tlResp.ok) throw new Error(`HTTP ${tlResp.status}`)
+    const tl = await tlResp.json()
+
+    // bbox 和静态贴图、点击查询是同一个（EPSG:4326 等经纬度网格），
+    // 所以两张图能严丝合缝地叠在一起，切模式时不会跳位
+    const [tw, ts, te, tn] = tl.bbox_wgs84
+    const tlRect = Cesium.Rectangle.fromDegrees(tw, ts, te, tn)
+
+    // 先把 7 张 PNG 塞进浏览器缓存。不预加载的话，第一次拖到底部会看到
+    // 一块空白——图层已经 show 了，但贴图还在下载路上。
+    tl.frames.forEach((f) => {
+      const im = new Image()
+      im.src = `/risk/${f.png}`
+    })
+
+    riskLayers = tl.frames.map((f) => {
+      const p = new Cesium.SingleTileImageryProvider({
+        url: `/risk/${f.png}`,
+        rectangle: tlRect,
+        tileWidth: tl.width,     // 1.147 必填，且必须等于 PNG 真实像素，否则拉伸变形
+        tileHeight: tl.height,
+      })
+      const layer = viewer.imageryLayers.addImageryProvider(p)
+      layer.alpha = 0.85         // 和静态贴图同一个不透明度，切模式时观感才一致
+      layer.show = false         // 默认全隐藏，点"时间轴"才出第一帧
+      return layer
+    })
+
+    timeline.value = tl
+    // 注记顶回最上面。这一步不能省：imagerLayers 是"后 add 的压在上面"，
+    // 7 个动态图层是后加的，不抬一下地名就被埋了。
+    if (noteLayer) viewer.imageryLayers.raiseToTop(noteLayer)
+    console.log(`[时间轴] 已载入 ${riskLayers.length} 帧：${tl.frames[0].date} ~ ${tl.frames.at(-1).date}`)
+  } catch (err) {
+    // 时间轴加载失败只是个功能缺失，不该让整页白屏或抛错中断后面的初始化
+    console.warn('[时间轴] 加载失败，时间轴按钮将不可用', err)
+  }
 
   // ---------------- 场景微调 ----------------
   // 关掉抗锯齿以外的花活，先保证帧率
@@ -608,6 +785,10 @@ onMounted(async () => {
 // 组件销毁时一定要 destroy，否则 GPU 显存不释放，热更新几次浏览器就崩了。
 // 这是 Cesium + Vue 最容易踩的坑。
 onBeforeUnmount(() => {
+  // 播放定时器不是 Cesium 对象，viewer.destroy() 管不到它。
+  // 不清的话，热更新后旧组件的定时器还在跑，而它引用的图层已经销毁——
+  // 控制台会刷 "layer is destroyed"，并且越积越多，最后卡死。
+  stopPlay()
   // 事件句柄不释放，热更新几次会攒下一堆监听器：点一下弹好几张卡片
   if (clickHandler && !clickHandler.isDestroyed()) {
     clickHandler.destroy()
@@ -653,10 +834,46 @@ onBeforeUnmount(() => {
   <div ref="container" class="cesium-container">
     <!-- 工具栏：目前只有一个按钮，将来"刷新图层""导出"都往这里加 -->
     <div class="tools">
+      <button :class="['tool-btn', { active: timelineOn }]" @click="toggleTimeline">
+        {{ timelineOn ? '退出时间轴' : '时间轴' }}
+      </button>
       <button :class="['tool-btn', { active: selectMode }]" @click="toggleSelect">
         {{ selectMode ? '退出框选' : '框选统计' }}
       </button>
     </div>
+
+    <!--
+      时间轴面板（M6）：只有开着时间轴并且 manifest 加载成功才出现。
+      用 v-if="timelineOn && timeline" 而不是 v-show：没数据时不该露出一个空壳子，
+      那会让人以为"功能坏了"，而实际只是 /risk/risk_timeline.json 还没生成。
+    -->
+    <aside v-if="timelineOn && timeline" class="timeline">
+      <div class="tl-head">
+        <button class="tl-play" :title="playing ? '暂停' : '播放'" @click="togglePlay">
+          {{ playing ? '⏸' : '▶' }}
+        </button>
+        <b class="tl-date">{{ curFrame ? curFrame.date : '—' }}</b>
+        <span class="tl-pos">第 {{ frameIdx + 1 }} / {{ timeline.frames.length }} 帧</span>
+      </div>
+
+      <!-- 用 @input 不用 @change：拖动过程中图就要跟着变 -->
+      <input
+        class="tl-range"
+        type="range"
+        min="0"
+        :max="timeline.frames.length - 1"
+        step="1"
+        :value="frameIdx"
+        @input="onSlide"
+      />
+
+      <p v-if="curFrame" class="tl-foot">
+        面雨量 {{ rainOf(curFrame).toFixed(1) }} mm ·
+        API {{ curFrame.api_mean.toFixed(0) }} mm ·
+        系数 {{ curFrame.factor_min.toFixed(2) }}~{{ curFrame.factor_max.toFixed(2) }} ·
+        极高 {{ curFrame.area_extreme_km2.toLocaleString() }} km²
+      </p>
+    </aside>
 
     <p v-if="selectMode" class="hint">
       按住左键拖出一个矩形，统计框内的风险构成（Esc 退出）
@@ -707,8 +924,16 @@ onBeforeUnmount(() => {
     <aside v-if="legend.length" class="legend">
       <div class="legend-head">
         <span>易涝风险指数</span>
-        <label class="switch">
-          <input v-model="overlayOn" type="checkbox" @change="toggleOverlay" />
+        <!-- 时间轴模式下这个勾选框没有意义（静态贴图已被强制关掉，改它只会
+             把静态图垫到动态帧下面，污染当天颜色），所以禁用 + 说清原因。
+             只说"禁用"不说"为什么"，用户会以为界面坏了。 -->
+        <label
+          :class="['switch', { disabled: timelineOn }]"
+          :title="timelineOn
+            ? '时间轴模式下由滑块控制图层，退出后可切换'
+            : '显示 / 隐藏静态指数贴图'"
+        >
+          <input v-model="overlayOn" type="checkbox" :disabled="timelineOn" @change="toggleOverlay" />
           <span>贴图</span>
         </label>
       </div>
@@ -747,6 +972,10 @@ onBeforeUnmount(() => {
           <li><span>经纬度</span><b>{{ pick.lon.toFixed(4) }}, {{ pick.lat.toFixed(4) }}</b></li>
         </ul>
         <p class="pick-note">指数 = 高程/坡度/填洼/汇流的加权和，0~1，越大越易涝</p>
+        <!-- 时间轴模式下必须说清楚：这里查的是"地形"，不随日期变 -->
+        <p v-if="timelineOn" class="pick-note">
+          地形指数不随降雨变化；当前帧的动态风险见下方时间轴
+        </p>
       </template>
 
       <p v-else class="pick-msg">{{ pick.message || '没有取到数据' }}</p>
@@ -769,6 +998,9 @@ onBeforeUnmount(() => {
   top: 14px;
   right: 16px;
   z-index: 22;
+  /* 两个按钮并排：时间轴 + 框选统计 */
+  display: flex;
+  gap: 8px;
 }
 
 .tool-btn {
@@ -808,6 +1040,90 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   transform: translateX(-50%);
   pointer-events: none;    /* 别挡住下面的画布 */
+}
+
+/* ---------- 时间轴（M6） ---------- */
+.timeline {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 23;                      /* 高于图例(20)/统计卡片(21)/工具栏(22)，别被压住 */
+  /*
+   * 宽度要能收，不能写死 660px：
+   *   底栏居中，右下角还坐着 208px 宽的图例。视口一旦窄到 1104px 以下，
+   *   两者就会叠上——而底栏 z-index 更高，被切掉的是图例右列那串阈值数字
+   *   （0.685~1.000），恰好是最需要看的一档。
+   *
+   *   calc(100% - 480px) 里的 480 是"必须让出去的横向空间"，两半对称算：
+   *     右侧：图例 208 + 右边距 16 = 224
+   *     左侧：居中底栏的另一半也要留同样 224
+   *     再加两条 16 的间隙   → 224×2 + 16×2 = 480
+   *   于是任意视口宽度下两者都至少隔 16px，不需要媒体查询、也不会出现
+   *   "断点差 1px 就重叠"的老问题。660 只是舒适上限。
+   *   1024 视口时收成 544px，滑块照样能拖（可拖长度约 500px）。
+   */
+  width: min(660px, calc(100% - 480px));
+  padding: 10px 16px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+.tl-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tl-play {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  color: #1a1a1a;
+  background: #ffd33d;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tl-play:hover {
+  filter: brightness(1.08);
+}
+
+.tl-date {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-pos {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 滑块不重写 thumb：accent-color 一行就能把浏览器默认的蓝色换成主题黄，
+   跨 Chrome/Edge/Firefox 都对，省掉一堆 ::-webkit-slider-thumb 前缀 */
+.tl-range {
+  width: 100%;
+  margin: 8px 0 6px;
+  accent-color: #ffd33d;
+  cursor: pointer;
+}
+
+.tl-foot {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- 框选统计卡片 ---------- */
@@ -936,6 +1252,17 @@ onBeforeUnmount(() => {
 
 .switch input {
   accent-color: var(--accent);
+}
+
+/* 禁用态必须有视觉区分：只把 input 设成 disabled，外观几乎没变化，
+   用户会连点几下然后来问"贴图开关坏了"。变灰 + 禁止手势是最省事的提示。 */
+.switch.disabled,
+.switch.disabled input {
+  cursor: not-allowed;
+}
+
+.switch.disabled {
+  opacity: 0.45;
 }
 
 .legend ul {
