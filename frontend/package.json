@@ -8,6 +8,8 @@
     "postinstall": "node scripts/copy-cesium.mjs",
     "dev": "vite",
     "build": "vite build",
+    "build:static": "vite build --mode static",
+    "verify:static": "node scripts/verify-static.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

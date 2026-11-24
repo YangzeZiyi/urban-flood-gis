@@ -43,10 +43,14 @@ urban-flood-gis/
 │   └── 周记.md               每周进度记录
 ├── backend/                  Spring Boot 后端（M4 模块）
 ├── frontend/                 Vue3 + Cesium 前端（M6 模块）
+│   ├── src/api.js            数据来源唯一入口：后端接口 / 静态数据文件
+│   ├── .env.static           静态数据版的构建开关
+│   └── scripts/verify-static.mjs  静态版与后端逐格对账
 ├── pipeline/                 Python 数据处理（M1 / M2 模块）
 │   ├── fetch/                数据采集脚本
 │   ├── process/              空间处理脚本
 │   ├── analysis/             诊断与敏感性分析
+│   ├── publish/              静态数据版导出（export_static.py）
 │   └── requirements.txt      Python 依赖清单
 ├── sql/                      数据库脚本
 │   ├── 01_schema.sql         建表 + 空间索引
@@ -111,6 +115,23 @@ cd frontend && npm run dev
 ### 4. 不装环境也能看
 
 `scripts/启动演示.bat` 直接起打包好的演示服务（jar 内已含前端），只要本机有 JDK 21 和 PostgreSQL。使用与排错见 `scripts/演示包说明.txt`。
+
+### 5. 在线版（静态数据）
+
+**https://wuhan-flood-risk.app.workbuddy.host/?sharecode=BL3KKABM4Y**
+
+线上没有 JVM，也没有 PostgreSQL，所以跑的是「静态数据版」：五个接口换成导出好的文件，
+点查按 0.1° 分块读 `.bin`，框选统计在浏览器里算。同一套 Vue 代码，构建时用
+`VITE_STATIC_DATA=1` 切分支（判断收在 `frontend/src/api.js` 一个文件里）。
+
+```bash
+cd pipeline && python publish/export_static.py   # 导出到 frontend/public/static-data（24 MB）
+cd frontend && npm run build:static              # 产物 dist/，丢给任意静态服务器
+node scripts/verify-static.mjs                   # 和后端逐格对账，需要后端在跑
+```
+
+静态版与后端的一致性：单点查询行列号与等级 100% 相同，框选统计的参与评价面积、
+均值、无数据格数与后端完全一致，分档占比差 ≤0.5 个百分点（量化到 1/254 导致）。
 
 ---
 

@@ -42,6 +42,11 @@ frontend/public/cesium/
 npm-debug.log*
 yarn-error.log*
 
+# 静态数据版的导出产物：24 MB 的量化网格 + 分块 bin，和 release/ 同理，
+# 可一键重建（pipeline/publish/export_static.py），进版本库只会拖慢 clone。
+# 需要复现就重跑一次导出脚本，导出逻辑本身在库里。
+frontend/public/static-data/
+
 # ===== IDE =====
 .idea/
 *.iml

@@ -4,14 +4,16 @@
  * ---------------------------------------------------------------------------
  * 布局很简单：上面一条标题栏，下面是撑满的三维场景，场景左上角浮一块状态面板。
  *
- * 这个文件还顺手做了一件重要的事：**调用后端接口**。
- * 打开页面就会请求 /api/health，把结果显示在面板上——
- * 这样一眼就能看出"前端→后端→数据库"这条链路通不通。
+ * 这个文件还顺手做了一件重要的事：**检测数据链路**。
+ * 打开页面就问一次"数据在不在"，把结果显示在面板上——
+ * 本机模式下这条链路是 前端→后端→数据库，静态版则是 前端→导出好的文件。
+ * 两种情况的差异被 api.js 吸收掉了，这里只调 loadHealth()。
  */
 import { computed, onMounted, ref } from 'vue'
 import CesiumViewer from './components/CesiumViewer.vue'
+import { loadHealth, isStatic } from './api.js'
 
-// health：后端返回的 JSON 对象；null 表示还没拿到
+// health：返回的 JSON 对象；null 表示还没拿到
 const health = ref(null)
 // loading：请求进行中
 const loading = ref(false)
@@ -19,24 +21,21 @@ const loading = ref(false)
 const error = ref('')
 
 /**
- * 请求后端健康检查接口。
- * 注意这里写的是相对路径 '/api/health'，不是 http://localhost:8080/...
- * 因为 vite.config.js 里配了代理，Vite 会帮我们转发到 8080。
- * 这样写的好处：将来部署到服务器，不用改代码。
+ * 检测数据是否可用。
+ * 注意这里没有写死 '/api/health'——地址由 api.js 按构建模式决定：
+ *   npm run dev / build        → /api/health（Vite 代理转到 8080）
+ *   npm run build:static       → /static-data/health.json
  */
 async function checkHealth() {
   loading.value = true
   error.value = ''
   try {
-    const res = await fetch('/api/health')
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`)
-    }
-    health.value = await res.json()
+    health.value = await loadHealth()
   } catch (e) {
-    // 后端没启动时，浏览器的报错是 "Failed to fetch"，对新手不太友好，
-    // 这里翻译成人话
-    error.value = `连不上后端（${e.message}）。检查 IDEA 里后端是否在跑，端口 8080。`
+    // 后端没启动时浏览器只报 "Failed to fetch"，对新手不友好，翻译成人话
+    error.value = isStatic
+      ? `静态数据读不到（${e.message}）。检查 dist/static-data 是否完整。`
+      : `连不上后端（${e.message}）。检查 IDEA 里后端是否在跑，端口 8080。`
     health.value = null
   } finally {
     loading.value = false
@@ -49,7 +48,8 @@ onMounted(checkHealth)
 // computed：依赖 health 自动计算，health 变了它会自动重算
 const statusText = computed(() => {
   if (loading.value) return '检测中…'
-  if (error.value) return '后端离线'
+  if (error.value) return isStatic ? '数据缺失' : '后端离线'
+  if (health.value?.mode === 'static') return '静态快照 · 在线'
   if (health.value?.database === 'UP') return '全链路正常'
   if (health.value) return '后端在线 · 数据库异常'
   return '未知'
@@ -58,6 +58,7 @@ const statusText = computed(() => {
 const statusClass = computed(() => {
   if (loading.value) return 'is-loading'
   if (error.value) return 'is-bad'
+  if (health.value?.mode === 'static') return 'is-ok'
   if (health.value?.database === 'UP') return 'is-ok'
   return 'is-warn'
 })
@@ -96,10 +97,17 @@ const postgisShort = computed(() => {
       <aside class="panel">
         <h2>系统连通性</h2>
         <ul>
-          <li><span>后端服务</span><b>{{ health?.status ?? '—' }}</b></li>
-          <li><span>数据库</span><b>{{ health?.database ?? '—' }}</b></li>
-          <li><span>PostGIS</span><b>{{ postgisShort }}</b></li>
+          <li><span>服务状态</span><b>{{ health?.status ?? '—' }}</b></li>
+          <!-- 静态版没有数据库，这两行显示出来只会是一串「—」，干脆换掉 -->
+          <template v-if="isStatic">
+            <li><span>数据来源</span><b>静态快照</b></li>
+          </template>
+          <template v-else>
+            <li><span>数据库</span><b>{{ health?.database ?? '—' }}</b></li>
+            <li><span>PostGIS</span><b>{{ postgisShort }}</b></li>
+          </template>
           <li><span>易涝区</span><b>{{ health?.zoneCount ?? '—' }} 条</b></li>
+          <li v-if="health?.dataset"><span>数据集</span><b>{{ health.dataset }}</b></li>
         </ul>
         <p v-if="error" class="err">{{ error }}</p>
         <p v-else class="tip">拖动旋转 · 滚轮缩放 · 右键平移</p>

@@ -10,6 +10,9 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as Cesium from 'cesium'
+// 数据来源统一走 api.js：本机连 Spring Boot，静态版读导出好的文件。
+// 组件不关心数据从哪来，只调这五个函数。
+import { adminUrl, zonesUrl, queryFloodIndex, queryFloodStats, isStatic } from '../api.js'
 
 // ref(值) 创建一个"响应式引用"。DOM 元素绑定到它之后，
 // 可以在 JS 里用 container.value 拿到那个真实 div
@@ -370,24 +373,70 @@ function tiandituLayer(layer, path) {
   })
 
   // 瓦片加载失败排查：天地图最常见的失败是"key 没绑当前域名"，
-  // 浏览器只会静默显示空白，很难查。这里把原因直接打到控制台（F12 可见）
+  // 浏览器只会静默显示空白，很难查。这里把原因直接打到控制台（F12 可见）。
+  // 只打前 3 条：key 失效时满屏都是失败瓦片，几百行日志反而把真正的原因埋掉了。
+  let logged = 0
   provider.errorEvent.addEventListener((err) => {
+    if (logged >= 3) return
+    logged += 1
     console.error(
       `[天地图] 瓦片加载失败 ${path} level=${err.level} x=${err.x} y=${err.y}`,
       err.error?.message || err.error,
     )
+    if (logged === 3) console.error('[天地图] 后续同类错误不再打印')
   })
 
   return provider
 }
 
+/**
+ * 底图降级：天地图不可用时换成本地离线底图
+ * ---------------------------------------------------------------------------
+ * 天地图的浏览器端 key 是绑域名的。部署到没登记的域名上，瓦片整片返回 403
+ * （响应体是 `{"code":301007,"msg":"域名不匹配"}`），而 Cesium 只会静默留白——
+ * 打开页面看到一个蓝色地球，分不清是"key 没绑域名"还是"代码写错了"。
+ *
+ * 所以连着失败 6 块就判定不可用，把最底层换成 Cesium 自带的 NaturalEarthII
+ * （随 public/cesium 一起发布，全球 1 级影像，当底色够用）：
+ *   - 不阻断：行政区划线、易涝点、风险贴图都在上层，页面照样能读
+ *   - 不静默：控制台给一条明确警告，指出该去改 key 的域名白名单
+ * 阈值取 6 而不是 1，是因为网络抖动也会让个别瓦片失败，太低会误切。
+ */
+const BASE_FAIL_THRESHOLD = 6
+
+function watchBaseMap(viewer, provider) {
+  let fails = 0
+  let switched = false
+  provider.errorEvent.addEventListener(async () => {
+    if (switched) return
+    fails += 1
+    if (fails < BASE_FAIL_THRESHOLD) return
+    switched = true
+    console.warn(
+      '[底图] 天地图瓦片连续加载失败，已切换为本地离线底图。'
+      + '如果这是线上环境，多半是 key 的域名白名单里没有当前域名（接口返回 301007）。',
+    )
+    try {
+      const tms = await Cesium.TileMapServiceImageryProvider.fromUrl(
+        Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
+      )
+      // 只换最底下那一层：注记层、风险贴图、时间轴帧都在它上面，不受影响
+      viewer.imageryLayers.remove(viewer.imageryLayers.get(0))
+      viewer.imageryLayers.addImageryProvider(tms, 0)
+    } catch (e) {
+      console.error('[底图] 离线底图也没加载起来，页面会只剩一个蓝色球体', e)
+    }
+  })
+}
+
 onMounted(async () => {
   // ---------------- 构造 Viewer ----------------
+  const baseProvider = tiandituLayer('img', 'img_w')
   viewer = new Cesium.Viewer(container.value, {
     // 底图：天地图卫星影像。
     // 天地图是 CGCS2000 坐标系，和我们库里的 WGS84 数据差异在厘米级，
     // 易涝区多边形能严丝合缝压在地物上——这是换掉高德（GCJ-02，偏移几百米）的原因
-    baseLayer: new Cesium.ImageryLayer(tiandituLayer('img', 'img_w')),
+    baseLayer: new Cesium.ImageryLayer(baseProvider),
 
     // 下面这些都是"关掉默认控件"，默认全开会让界面很花
     animation: false,        // 左下角时间播放器
@@ -411,6 +460,9 @@ onMounted(async () => {
   // 生产上留着无害——只是两个全局引用，不占内存也不影响性能。
   window.__viewer = viewer
   window.__Cesium = Cesium
+
+  // 底图兜底：天地图瓦片连续失败就自动换成离线底图（见 watchBaseMap 的注释）
+  watchBaseMap(viewer, baseProvider)
 
   // ---------------- 叠加易涝指数贴图（M3 的成果） ----------------
   // 这是"从数据到屏幕"的最后一公里：一张 PNG + 一个经纬度矩形，就这么多。
@@ -577,8 +629,8 @@ onMounted(async () => {
   //
   // ?level=district 只取 13 个区县。不传会连市级轮廓一起返回，
   // 市级轮廓和区县外沿完全重合，会画出双重线，反而难看。
-  const resp = await fetch('/api/admin?level=district')
-  if (!resp.ok) throw new Error(`边界接口返回 HTTP ${resp.status}`)
+  const resp = await fetch(adminUrl())
+  if (!resp.ok) throw new Error(`边界数据返回 HTTP ${resp.status}`)
   const adminGeoJson = await resp.json()
 
   const lineColor = Cesium.Color.fromCssColorString('#7fd4ff').withAlpha(0.95)
@@ -643,7 +695,7 @@ onMounted(async () => {
   // 不给实际积水范围，所以用统一的缓冲圈表示"这一带"，
   // 不假装知道它到底漫到哪条街（编一个多边形面积经不起追问）。
   // 半径 100 米用 geography 算，保证在任意纬度都是真的 100 米。
-  const zones = await Cesium.GeoJsonDataSource.load('/api/zones', { clampToGround: true })
+  const zones = await Cesium.GeoJsonDataSource.load(zonesUrl(), { clampToGround: true })
   viewer.dataSources.add(zones)
   console.log(`[易涝区] 已加载 ${zones.entities.values.length} 条`)
 
@@ -741,15 +793,16 @@ onMounted(async () => {
     const y = Math.max(Math.min(screenY + 16, canvas.clientHeight - CARD_H), 8)
 
     try {
-      // 走 vite 代理到 8080；经纬度保留 6 位小数，约 0.1 m 精度，足够
-      const resp = await fetch(
-        `/api/flood-index?lon=${lon.toFixed(6)}&lat=${lat.toFixed(6)}`)
-      const data = await resp.json()
+      // 经纬度保留 6 位小数，约 0.1 m 精度，足够。
+      // 数据来源由 api.js 决定：本机走后端接口，静态版读 0.1° 分块的 .bin。
+      const data = await queryFloodIndex(lon, lat)
       pick.value = { ...data, lon, lat, x, y }
     } catch (e) {
       pick.value = {
         status: 'error',
-        message: `查询失败：${e.message}。检查后端是否在跑（8080）。`,
+        message: isStatic
+          ? `查询失败：${e.message}。检查 static-data 目录是否完整。`
+          : `查询失败：${e.message}。检查后端是否在跑（8080）。`,
         lon, lat, x, y,
       }
     }
@@ -817,20 +870,19 @@ onMounted(async () => {
     })
   }
 
-  /** 请求后端统计。参数用 6 位小数，约 0.1 m，和单点查询保持一致 */
+  /** 请求统计。参数用 6 位小数，约 0.1 m，和单点查询保持一致 */
   async function loadStats(w, s, e, n) {
     stats.value = { status: 'loading' }
     const t0 = performance.now()
     try {
-      const q = `west=${w.toFixed(6)}&south=${s.toFixed(6)}`
-        + `&east=${e.toFixed(6)}&north=${n.toFixed(6)}`
-      const resp = await fetch(`/api/flood-index/stats?${q}`)
-      const data = await resp.json()
+      const data = await queryFloodStats(w, s, e, n)
       stats.value = { ...data, ms: Math.round(performance.now() - t0) }
     } catch (err) {
       stats.value = {
         status: 'error',
-        message: `统计失败：${err.message}。检查后端是否在跑（8080）。`,
+        message: isStatic
+          ? `统计失败：${err.message}。检查 static-data 目录是否完整。`
+          : `统计失败：${err.message}。检查后端是否在跑（8080）。`,
       }
     }
   }
