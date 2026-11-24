@@ -63,8 +63,19 @@ public class HomeController {
                         易涝区 GeoJSON（可按 <code>?minLevel=3</code> 过滤）</li>
                   </ul>
                   <p class="tip">
-                    前端已打包进本服务，直接访问 <a href="/">http://localhost:8080/</a>
+                    <!--
+                      这里的地址必须写 127.0.0.1，不能写 localhost，也不是笔误。
+                      天地图 key 的域名白名单里只登记了 127.0.0.1：用 localhost 打开时
+                      浏览器发出的 Referer 是 http://localhost:8080/，天地图判定域名不符
+                      返回 403（code 301007），卫星底图的所有瓦片都会失败，
+                      页面只剩一个蓝色地球，而其他功能看起来全都正常，极难自查。
+                      127.0.0.1 与 localhost 在浏览器眼里是两个不同域名，白名单不认后者。
+                      所以 href 写成绝对地址：从 localhost 进来的访问者点一下就能换到合法域名。
+                    -->
+                    前端已打包进本服务，直接访问
+                    <a href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>
                     即可看到地图页面，不需要另外启动 npm run dev。
+                    注意用 127.0.0.1 而不是 localhost，否则卫星底图会全部 403。
                   </p>
                 </body>
                 </html>
