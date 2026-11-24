@@ -30,6 +30,12 @@ const legend = ref([])        // [{ name, lo, hi, color }]，由 JSON 提供
 const legendFoot = ref('')    // 图例底部那行小字
 const overlayOn = ref(true)   // 图例上的勾选框
 
+// 点击查询的结果卡片。null = 不显示
+// 结构：{ status, lon, lat, index, level, color, elev, slope, acc, message, x, y }
+const pick = ref(null)
+let pickEntity = null         // 点击位置的标记点
+let clickHandler = null       // Cesium 事件句柄，销毁时要一起释放
+
 // 因子英文键 → 中文名，只为了图例底部那行字好读
 const CN = { elev: '高程', slope: '坡度', fill: '填洼', acc: '汇流' }
 
@@ -332,11 +338,88 @@ onMounted(async () => {
       entity.polygon.outlineWidth = 2
     }
   }
+
+  // ---------------- 点击查询 ----------------
+  // 整条链路：屏幕像素 → 经纬度 → 后端 → 栅格里的一个格子 → 卡片
+  //
+  // 关键在第一步的换算，Cesium 分了两个动作：
+  //   pickEllipsoid     从相机穿过这个像素发一条射线，求它与地球椭球面的交点
+  //   Cartographic.fromCartesian  把三维坐标拆成（经度, 纬度, 高度），弧度制
+  //
+  // 注意 pickEllipsoid 求的是"椭球面"，不是"真实地面"。
+  // 我们没开地形，两者是一回事；将来开了地形，这里要换成 globe.pick。
+  clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
+
+  /**
+   * 查询一个经纬度并弹卡片。
+   * 抽成独立函数有两个好处：
+   *   1. 点击事件只负责"屏幕 → 经纬度"，查询逻辑可以单独测
+   *   2. 将来做"搜索框定位""链接分享某个点"时，直接调这个函数，不用伪造鼠标事件
+   */
+  async function queryAt(lon, lat, screenX, screenY, cartesian) {
+    // 先落一个标记：卡片会挡住点击处，标记不会，让人知道点的是哪
+    if (pickEntity) viewer.entities.remove(pickEntity)
+    pickEntity = viewer.entities.add({
+      position: cartesian,
+      point: {
+        pixelSize: 7,
+        color: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.fromCssColorString('#f85149'),
+        outlineWidth: 2,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        // 让标记永远画在最前面，不会被贴图或多边形挡住
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      },
+    })
+
+    // 卡片位置：鼠标右下方 16 像素；贴近屏幕边缘时往回缩
+    const canvas = viewer.scene.canvas
+    const CARD_W = 210         // 略大于卡片实际宽度，留点余量
+    const CARD_H = 190
+    const x = Math.max(Math.min(screenX + 16, canvas.clientWidth - CARD_W), 8)
+    const y = Math.max(Math.min(screenY + 16, canvas.clientHeight - CARD_H), 8)
+
+    try {
+      // 走 vite 代理到 8080；经纬度保留 6 位小数，约 0.1 m 精度，足够
+      const resp = await fetch(
+        `/api/flood-index?lon=${lon.toFixed(6)}&lat=${lat.toFixed(6)}`)
+      const data = await resp.json()
+      pick.value = { ...data, lon, lat, x, y }
+    } catch (e) {
+      pick.value = {
+        status: 'error',
+        message: `查询失败：${e.message}。检查后端是否在跑（8080）。`,
+        lon, lat, x, y,
+      }
+    }
+  }
+
+  clickHandler.setInputAction((movement) => {
+    const cartesian = viewer.camera.pickEllipsoid(
+      movement.position, viewer.scene.globe.ellipsoid)
+    if (!cartesian) {
+      pick.value = null       // 点到太空里了，不显示卡片
+      return
+    }
+    const carto = Cesium.Cartographic.fromCartesian(cartesian)
+    queryAt(
+      Cesium.Math.toDegrees(carto.longitude),
+      Cesium.Math.toDegrees(carto.latitude),
+      movement.position.x,
+      movement.position.y,
+      cartesian,
+    )
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 })
 
 // 组件销毁时一定要 destroy，否则 GPU 显存不释放，热更新几次浏览器就崩了。
 // 这是 Cesium + Vue 最容易踩的坑。
 onBeforeUnmount(() => {
+  // 事件句柄不释放，热更新几次会攒下一堆监听器：点一下弹好几张卡片
+  if (clickHandler && !clickHandler.isDestroyed()) {
+    clickHandler.destroy()
+    clickHandler = null
+  }
   if (viewer && !viewer.isDestroyed()) {
     viewer.destroy()
     viewer = null
@@ -395,6 +478,31 @@ onBeforeUnmount(() => {
 
       <p class="legend-foot">{{ legendFoot }}</p>
     </aside>
+
+    <!--
+      点击查询卡片：位置由 JS 按点击点算出（left/top 用内联 style）。
+      用 v-if 而不是 v-show：不显示的时候连 DOM 都不要，省得它挡住鼠标事件。
+    -->
+    <div v-if="pick" class="pick" :style="{ left: pick.x + 'px', top: pick.y + 'px' }">
+      <button class="pick-close" title="关闭" @click="pick = null">×</button>
+
+      <template v-if="pick.status === 'ok'">
+        <div class="pick-head">
+          <i :style="{ background: pick.color }"></i>
+          <b>{{ pick.level }}</b>
+          <span class="pick-val">{{ pick.index.toFixed(3) }}</span>
+        </div>
+        <ul>
+          <li><span>高程</span><b>{{ pick.elev.toFixed(1) }} m</b></li>
+          <li><span>坡度</span><b>{{ pick.slope.toFixed(2) }}°</b></li>
+          <li><span>汇流</span><b>{{ pick.acc.toLocaleString() }}</b></li>
+          <li><span>经纬度</span><b>{{ pick.lon.toFixed(4) }}, {{ pick.lat.toFixed(4) }}</b></li>
+        </ul>
+        <p class="pick-note">指数 = 高程/坡度/填洼/汇流的加权和，0~1，越大越易涝</p>
+      </template>
+
+      <p v-else class="pick-msg">{{ pick.message || '没有取到数据' }}</p>
+    </div>
   </div>
 </template>
 
@@ -481,6 +589,99 @@ onBeforeUnmount(() => {
   border-top: 1px dashed rgba(255, 255, 255, 0.08);
   font-size: 10px;
   line-height: 1.5;
+  color: var(--text-dim);
+}
+
+/* ---------- 点击查询卡片 ---------- */
+.pick {
+  position: absolute;
+  z-index: 21;              /* 比图例再高一层 */
+  width: 198px;             /* 和 JS 里的 CARD_W 对得上（含 padding） */
+  padding: 10px 12px 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.pick-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  line-height: 14px;
+  font-size: 14px;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.pick-close:hover {
+  color: var(--text);
+}
+
+.pick-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.pick-head i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.pick-head b {
+  font-size: 13px;
+}
+
+.pick-val {
+  margin-left: auto;
+  margin-right: 14px;       /* 让开关闭按钮 */
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.pick ul {
+  list-style: none;
+}
+
+.pick li {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.pick li span {
+  color: var(--text-dim);
+}
+
+.pick li b {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.pick-note {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.pick-msg {
+  padding-right: 12px;
+  font-size: 11px;
+  line-height: 1.6;
   color: var(--text-dim);
 }
 

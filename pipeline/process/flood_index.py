@@ -52,7 +52,14 @@ ACC_NPY = DEM_DIR / "wuhan_flowacc.npy"
 OUT_NPY = DEM_DIR / "wuhan_flood_index.npy"
 OUT_PNG = IMG_DIR / "wuhan_flood_index.png"
 OUT_OVERLAY = OVERLAY_DIR / "wuhan_flood_index.png"
+OUT_GRID_BIN = DEM_DIR / "wuhan_flood_index_grid.bin"
+OUT_GRID_JSON = DEM_DIR / "wuhan_flood_index_grid.json"
 ADMIN_JSON = PROJECT_DIR / "data" / "raw" / "admin" / "wuhan_420100_full.json"
+
+# 点击查询网格的像元大小：3 角秒。
+# 3 角秒在南纬 30° 一带约等于 92 m（南北）× 77 m（东西），比成果网格的 30 m 粗，
+# 但点击查询只需要"这一点大概什么等级"，而且屏幕上那张贴图本身是 120 m 的。
+CLICK_RES_DEG = 3 / 3600.0
 
 RES = 30.0                                       # 像元边长（米，EPSG:4547）
 CELL_KM2 = RES * RES / 1e6                       # 单个像元面积 0.0009 km²
@@ -173,6 +180,91 @@ def build_levels(index, mask):
     edges = [0.0, p35, p65, p88, p97, 1.001]
     return [(edges[i], edges[i + 1], LEVEL_STYLE[i][0], LEVEL_STYLE[i][1])
             for i in range(5)]
+
+
+def export_click_grid(layers, levels, mask):
+    """把成果网格重采样成"经纬度格网"，写成二进制 + 头文件，供后端按坐标查。
+
+    为什么不在 Java 里做投影？
+        浏览器点一下给的是经纬度（WGS84），成果网格是 EPSG:4547（米）。
+        要在后端换算，就得在 Java 里再实现一遍高斯-克吕格投影——多一个库、
+        多一处可能出错的地方。这里换个位置解决：Python 侧用 rasterio 把网格
+        重采样到经纬度，后端就只剩一个线性公式，一行代码，没有三角函数。
+        代价：精度从 30 m 降到约 90 m。而屏幕上那张贴图本身就是 120 m 的，
+        所以"点到的值"和"看到的值"是同一档精度，不会互相矛盾。
+
+    为什么是二进制而不是 CSV / JSON？
+        1656 × 1671 = 277 万个格子。写 JSON 要 200 MB 以上，解析还得全读进来；
+        二进制 44 MB，后端 seek 一次就取到任意一格，O(1)，内存占用为零。
+
+    文件布局（前后端契约，改这里三边都要跟着改）：
+        row-major，每格 4 个 float32 紧挨着：[index, elev, slope, acc]
+        little-endian（x86 和 numpy 默认如此；Java 的 readFloat 是大端，要手动翻）
+        offset = (row * width + col) * 16
+    """
+    import rasterio
+    from rasterio.warp import reproject, Resampling
+    from rasterio.transform import from_bounds
+
+    with rasterio.open(DEM_DIR / "wuhan_dem_cgcs2000.tif") as ds:
+        src_transform = ds.transform
+        src_crs = ds.crs
+
+    bbox = json.loads((DEM_DIR / "wuhan_dem_meta.json").read_text(encoding="utf-8"))["bbox_wgs84"]
+    west, south, east, north = bbox
+    width = int(round((east - west) / CLICK_RES_DEG))
+    height = int(round((north - south) / CLICK_RES_DEG))
+    dst_transform = from_bounds(west, south, east, north, width, height)
+
+    names = ("index", "elev", "slope", "acc")
+    # index 只保留"参与评价的陆地"：市域外和水体一律写成 NaN。
+    # 这样后端读到 NaN 就能回答"这里不评价"，而不是硬给一个 0.7 的分数——
+    # "没数据"和"低风险"是两件事，不能混。
+    # 另外三层保留原值：点到一个湖上，仍然可以告诉用户"这是水面，高程 26.9 m"。
+    idx = np.where(mask, layers["index"], np.nan).astype(np.float32)
+
+    chans = []
+    for name in names:
+        src = idx if name == "index" else layers[name]
+        dst = np.full((height, width), np.nan, dtype=np.float32)
+        reproject(
+            source=src, destination=dst,
+            src_transform=src_transform, src_crs=src_crs,
+            dst_transform=dst_transform, dst_crs="EPSG:4326",
+            # 用最近邻：不要插值。指数是"等级"，插值会造出 0.6123 这种
+            # 本来不存在的数；高程插值倒还好，但四层必须用同一套规则。
+            resampling=Resampling.nearest,
+            src_nodata=np.nan, dst_nodata=np.nan,
+        )
+        chans.append(dst)
+
+    grid = np.stack(chans, axis=-1).astype("<f4")     # <f4 = 小端 float32
+    grid.tofile(OUT_GRID_BIN)
+
+    header = {
+        "file": OUT_GRID_BIN.name,
+        "width": width,
+        "height": height,
+        "channels": list(names),
+        "bytes_per_cell": len(names) * 4,
+        "byte_order": "little-endian",
+        "layout": "row-major, channels interleaved",
+        "bbox_wgs84": [round(float(v), 6) for v in bbox],
+        "res_deg": [CLICK_RES_DEG, CLICK_RES_DEG],
+        "nodata": "NaN",
+        "index_masked": "水体与市域外的像元，index 通道为 NaN（elev/slope/acc 仍有值）",
+        "levels": [
+            {"name": n, "lo": round(float(lo), 4), "hi": round(float(hi), 4), "color": c}
+            for lo, hi, n, c in levels
+        ],
+    }
+    OUT_GRID_JSON.write_text(json.dumps(header, ensure_ascii=False, indent=2),
+                             encoding="utf-8")
+
+    print(f"  已出点击网格: {OUT_GRID_BIN.name}  {width}x{height}  "
+          f"{OUT_GRID_BIN.stat().st_size / 1e6:.1f} MB  "
+          f"（{CLICK_RES_DEG * 3600:.0f} 角秒/格）")
+    print(f"  已出网格头:   {OUT_GRID_JSON.name}")
 
 
 # ---------------------------------------------------------------------------
@@ -565,7 +657,7 @@ def main() -> None:
         rgb = rgb.astype(np.uint8)
 
         # alpha：从"中"这一档（p65）开始显色，到"极高"（p97）接近全不透明
-        lo_a, hi_a = levels[2][0], max(levels[4][0], levels[2][0] + 1e-3)
+        lo_a, hi_a = levels[3][0], max(levels[4][0], levels[2][0] + 1e-3)
         alpha = np.clip((v - lo_a) / (hi_a - lo_a), 0.0, 1.0) ** 1.1 * 205
         rgba = np.dstack([rgb, alpha.astype(np.uint8)])
         Image.fromarray(rgba, mode="RGBA").save(OUT_OVERLAY, optimize=True)
@@ -602,6 +694,17 @@ def main() -> None:
         print(f"  已出元数据: {out_json.relative_to(PROJECT_DIR)}")
     except Exception as e:
         print(f"  [贴图失败] {e}")
+
+    # ---- 点击查询网格 ----
+    try:
+        export_click_grid(
+            {"index": index, "elev": raw["elev"],
+             "slope": raw["slope"], "acc": raw["acc"]},
+            levels,
+            land,
+        )
+    except Exception as e:
+        print(f"  [点击网格失败] {e}")
 
     print()
     print("=" * 74)

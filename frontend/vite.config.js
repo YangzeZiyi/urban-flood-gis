@@ -30,7 +30,10 @@ export default defineConfig({
      */
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // 默认转到 8080（IDEA 里跑的后端）。
+        // 想临时指向别的端口（比如另开一个实例做对比测试），
+        // 启动前设环境变量 VITE_PROXY_TARGET=http://localhost:8081
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
         changeOrigin: true,
       },
     },
