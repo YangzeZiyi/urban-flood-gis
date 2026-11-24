@@ -124,6 +124,11 @@
         · dist 在   -> 打进 jar，得到一个自包含的演示包
         · dist 不在 -> 只打后端，构建照常成功，零影响
       这个 profile 不需要 -P 手动指定，Maven 自己判断。
+
+      一个必须知道的副作用：copy-resources 只覆盖同名文件，不删除 target 里
+      多出来的旧文件。所以 frontend/dist 里删掉的东西会残留，下次打 jar 又被带上。
+      真实踩过：时间轴的帧从 7 个 png 换成 153 个 webp 后，旧 png 仍留在 jar 里。
+      打演示包时请用 mvn clean package（scripts/build-demo.bat 已经是这么做的）。
       ========================================================================
     -->
     <profiles>

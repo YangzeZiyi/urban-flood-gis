@@ -96,14 +96,23 @@ REM  第 3 步：打包后端
 REM  注意 call：mvn 是 .cmd 批处理，直接调用会夺走控制权，
 REM  本脚本后面的组装步骤就全被跳过了 —— 必须 call。
 REM  -DskipTests：演示包不需要跑单测，省 30 秒。
+REM
+REM  为什么必须是 clean package，不能只写 package（踩过一次，别改回去）：
+REM  pom 里把前端 dist 复制进 target/classes/static 用的是 copy-resources，
+REM  它只负责覆盖同名文件，**不会删除源目录里已经消失的文件**。
+REM  于是上一版打进 target 的旧资源会一直留在那里，再打 jar 时又被一起带上。
+REM  真实事故：时间轴的帧从 7 个 png 换成 153 个 webp、旧的 7 个 png 已从
+REM  frontend/public/risk/ 删掉，但 jar 里仍然躺着那 7 个 png（4.7 MB 死资源），
+REM  数 jar 内文件会对不上 dist，而且谁也不知道哪些是当前有效的。
+REM  clean 先把 target 整个删掉，保证 jar 里的静态资源和 frontend/dist 严格一致。
 REM ---------------------------------------------------------------------------
-echo [3/5] 打包后端（mvn package -DskipTests）...
+echo [3/5] 打包后端（mvn clean package -DskipTests）...
 cd /d "%ROOT%\backend"
 if errorlevel 1 (
     echo       [失败] 进不去 backend 目录：%ROOT%\backend
     goto :fail
 )
-call "%MVN%" package -DskipTests
+call "%MVN%" clean package -DskipTests
 if errorlevel 1 (
     echo       [失败] mvn package 失败，看上面的报错
     goto :fail
