@@ -713,7 +713,10 @@ onBeforeUnmount(() => {
         <li v-for="lv in legend" :key="lv.name">
           <i :style="{ background: lv.color }"></i>
           <span>{{ lv.name }}</span>
-          <b>{{ lv.lo.toFixed(2) }}~{{ lv.hi > 1 ? '1.00' : lv.hi.toFixed(2) }}</b>
+          <!-- 三位小数：分级阈值是 p35/p65/p88/p97 算出来的 0.2481/0.3761/0.5593/0.6849，
+               只留两位会造出 0.0007 宽的"缝"——落在 0.5593~0.56 的点卡片说"高"、
+               图例却说"中"。宁可难看一点，不要自相矛盾。上限 1.001 夹到 1.000 显示。 -->
+          <b>{{ lv.lo.toFixed(3) }}~{{ Math.min(lv.hi, 1).toFixed(3) }}</b>
         </li>
       </ul>
 
