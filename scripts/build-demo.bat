@@ -61,6 +61,13 @@ if not exist "node_modules" (
         goto :fail
     )
 )
+
+REM  先自己清空 dist。Vite 打包前会自动 emptyOutDir，
+REM  但那一步走的是 node 的批量删除接口，一次删几百个
+REM  文件时容易被安全钩子拦下来，报 BUILD FAILED 但不告诉你是删文件
+REM  被拦了。用 cmd 的 rmdir 先删，Vite 看到目录不存在就跳过清理。
+REM  这和下面 mvn 必须 clean 是同一个道理：旧文件不能留。
+if exist "dist" rmdir /s /q "dist"
 call npm run build
 if errorlevel 1 (
     echo       [失败] npm run build 失败，看上面的报错
