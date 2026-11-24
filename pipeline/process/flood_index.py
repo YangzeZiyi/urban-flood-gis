@@ -237,6 +237,43 @@ def build_levels(index, mask):
             for i in range(5)]
 
 
+def to_wgs84_grid(layer, src_transform, src_crs, width, height, dst_transform):
+    """把 EPSG:4547 的一层重采样到等经纬度的 4326 网格（最近邻，NaN 保持 NaN）。
+
+    为什么必须有这一步？（这是本项目最容易埋雷的一处）
+        4547 下的栅格是**矩形**（4440 x 5162 个 30 m 像元），
+        但它在经纬度下的真实 footprint 是**梯形**——高斯-克吕格投影在 1.4° 的
+        经度跨度上必然产生这种变形：越往东，同样的米数对应的经度越多。
+        把 4547 的数组直接按 bbox 铺到经纬度矩形上，等于把梯形当矩形用，
+        实测右上角偏了约 1.5 km（50 个 30 m 像元）——贴图和真实地形错开一整条街，
+        而且不会报错，只会"看起来有点不对"。
+
+    reproject 干的事：
+        对 4326 网格的每个格子，反查它的中心落在 4547 的哪个像元里，
+        把那个像元的值搬过来。梯形以外（外接矩形的四个角）自然留 NaN，
+        于是一张 PNG 自己就带上了正确的形状，不用再手工裁。
+
+    为什么用最近邻而不是双线性？
+        指数是"等级"，双线性会造出 0.6123 这种本来不存在的中间值，
+        图例上找不到它属于哪一档；掩膜被插值还会糊成一圈半透明毛边。
+
+    调用方：export_click_grid 的四层 + Cesium 那张 RGBA 贴图。
+    两者必须走同一个函数、同一个网格，才能保证"点到的值"和"看到的颜色"
+    是同一个格子——否则前端点击查询和眼睛看到的图形永远在互相打架。
+    """
+    from rasterio.warp import reproject, Resampling
+
+    dst = np.full((height, width), np.nan, dtype=np.float32)
+    reproject(
+        source=layer, destination=dst,
+        src_transform=src_transform, src_crs=src_crs,
+        dst_transform=dst_transform, dst_crs="EPSG:4326",
+        resampling=Resampling.nearest,
+        src_nodata=np.nan, dst_nodata=np.nan,
+    )
+    return dst
+
+
 def export_click_grid(layers, levels, mask):
     """把成果网格重采样成"经纬度格网"，写成二进制 + 头文件，供后端按坐标查。
 
@@ -245,8 +282,9 @@ def export_click_grid(layers, levels, mask):
         要在后端换算，就得在 Java 里再实现一遍高斯-克吕格投影——多一个库、
         多一处可能出错的地方。这里换个位置解决：Python 侧用 rasterio 把网格
         重采样到经纬度，后端就只剩一个线性公式，一行代码，没有三角函数。
-        代价：精度从 30 m 降到约 90 m。而屏幕上那张贴图本身就是 120 m 的，
-        所以"点到的值"和"看到的值"是同一档精度，不会互相矛盾。
+        代价：精度从 30 m 降到约 90 m。而屏幕上那张贴图现在是**同一个 90 m 网格**
+        （见 to_wgs84_grid 的说明），所以"点到的值"和"看到的值"是同一格，
+        不会互相矛盾——这两者一旦不同源，就会出现"图上明明是红的，点下去说低风险"。
 
     为什么是二进制而不是 CSV / JSON？
         1656 × 1671 = 277 万个格子。写 JSON 要 200 MB 以上，解析还得全读进来；
@@ -258,7 +296,6 @@ def export_click_grid(layers, levels, mask):
         offset = (row * width + col) * 16
     """
     import rasterio
-    from rasterio.warp import reproject, Resampling
     from rasterio.transform import from_bounds
 
     with rasterio.open(DEM_DIR / "wuhan_dem_cgcs2000.tif") as ds:
@@ -281,17 +318,10 @@ def export_click_grid(layers, levels, mask):
     chans = []
     for name in names:
         src = idx if name == "index" else layers[name]
-        dst = np.full((height, width), np.nan, dtype=np.float32)
-        reproject(
-            source=src, destination=dst,
-            src_transform=src_transform, src_crs=src_crs,
-            dst_transform=dst_transform, dst_crs="EPSG:4326",
-            # 用最近邻：不要插值。指数是"等级"，插值会造出 0.6123 这种
-            # 本来不存在的数；高程插值倒还好，但四层必须用同一套规则。
-            resampling=Resampling.nearest,
-            src_nodata=np.nan, dst_nodata=np.nan,
-        )
-        chans.append(dst)
+        # 重投影统一走 to_wgs84_grid：贴图也用同一个函数、同一个网格，
+        # 这样"点到的值"和"看到的颜色"保证是同一格。
+        chans.append(to_wgs84_grid(src, src_transform, src_crs,
+                                   width, height, dst_transform))
 
     grid = np.stack(chans, axis=-1).astype("<f4")     # <f4 = 小端 float32
     grid.tofile(OUT_GRID_BIN)
@@ -696,13 +726,36 @@ def main() -> None:
     #   指数的像元有 2268 万个，转成多边形是几十万个矩形，浏览器一定卡死。
     #   用一张 PNG 铺在地表上，GPU 只画 1 个四边形，代价几乎为零。
     #   透明度跟着指数走：低风险区完全透明，红色区才显出来。
+    #
+    # 为什么必须先重投影，不能直接 index[::4, ::4] 铺上去？
+    #   4547 的栅格是矩形，它在地球上的真实形状是梯形（见 to_wgs84_grid）。
+    #   老写法把梯形当矩形铺，实测右上角错约 1.5 km——贴图整体错开一条街，
+    #   而且不报错，只能靠"看着别扭"发现。现在的走法和点击网格完全同源：
+    #   同尺寸、同 bbox、同一次 reproject，所以图上看红的格子，点下去就是红的。
     try:
         from PIL import Image
+        from rasterio.transform import from_bounds
+        import rasterio
+
         OVERLAY_DIR.mkdir(parents=True, exist_ok=True)
-        s = 4
-        sub = index[::s, ::s]
-        v = np.nan_to_num(sub, nan=0.0)
-        v[(water | ~valid)[::s, ::s]] = 0.0   # 水体和市域外都不上色
+        meta = json.loads((DEM_DIR / "wuhan_dem_meta.json").read_text(encoding="utf-8"))
+        bbox = meta["bbox_wgs84"]
+        west, south, east, north = bbox
+
+        # 目标网格：和点击查询一模一样（3 角秒 = 0.0008333°，1656 x 1671）
+        ow = int(round((east - west) / CLICK_RES_DEG))
+        oh = int(round((north - south) / CLICK_RES_DEG))
+        dst_transform = from_bounds(west, south, east, north, ow, oh)
+
+        with rasterio.open(DEM_DIR / "wuhan_dem_cgcs2000.tif") as ds:
+            src_transform, src_crs = ds.transform, ds.crs
+
+        # 重投影前先把非陆地置 NaN：掩膜于是跟着重采样一起走，
+        # 不用再对 water | ~valid 做 [::4, ::4] 降采样（那样采样点和水体边界
+        # 会错开，湖边会出现一圈假的高风险）。
+        v = to_wgs84_grid(np.where(land, index, np.nan).astype(np.float32),
+                          src_transform, src_crs, ow, oh, dst_transform)
+        v = np.nan_to_num(v, nan=0.0)          # NaN 处不上色，alpha 后面会是 0
 
         # YlOrRd 手动插值成 5 段（不依赖 matplotlib 的 colormap 对象）
         stops = np.array([
@@ -722,11 +775,32 @@ def main() -> None:
         alpha = np.clip((v - lo_a) / (hi_a - lo_a), 0.0, 1.0) ** 1.1 * 205
         rgba = np.dstack([rgb, alpha.astype(np.uint8)])
         Image.fromarray(rgba, mode="RGBA").save(OUT_OVERLAY, optimize=True)
-        bbox = json.loads((DEM_DIR / "wuhan_dem_meta.json").read_text(encoding="utf-8"))["bbox_wgs84"]
         print(f"  已出贴图: {OUT_OVERLAY.relative_to(PROJECT_DIR)}  "
               f"{rgba.shape[1]}x{rgba.shape[0]}  "
               f"{OUT_OVERLAY.stat().st_size / 1e6:.1f} MB")
         print(f"  贴图范围（西, 南, 东, 北）= {bbox}")
+
+        # ---- 校验：贴图四角是否落在 bbox 四角上 ----
+        # 4326 网格是 from_bounds(bbox) 反推出来的，四角像素的**中心**离 bbox 的角
+        # 横竖各半个像元，合起来就是半个像元的对角线（本网格约 61 m）。
+        # 偏差要上百米，说明网格尺寸和 bbox 对不上（width/height 算错、res 改了没同步）。
+        from pyproj import Geod
+        geod = Geod(ellps="WGS84")
+        corners = [(0, 0, west, north), (0, ow - 1, east, north),
+                   (oh - 1, 0, west, south), (oh - 1, ow - 1, east, south)]
+        worst, worst_at = 0.0, ""
+        for r_, c_, lon0, lat0 in corners:
+            lon = dst_transform.c + (c_ + 0.5) * dst_transform.a
+            lat = dst_transform.f + (r_ + 0.5) * dst_transform.e
+            _, _, dist = geod.inv(lon, lat, lon0, lat0)
+            if abs(dist) > worst:
+                worst, worst_at = abs(dist), f"行{r_}/列{c_}"
+        half = 0.5 * CLICK_RES_DEG
+        _, _, diag = geod.inv(west, north, west + half, north - half)
+        print(f"  贴图四角与 bbox 最大偏差 {worst:.0f} m（{worst_at}；"
+              f"理论值 = 半个像元对角线 {abs(diag):.0f} m，必须 < 100 m）")
+        if worst >= 100.0:
+            raise ValueError(f"贴图网格与 bbox 不匹配：最大偏差 {worst:.0f} m")
 
         # ---- 元数据 sidecar ----
         # 前端不该把 bbox、分级阈值这些数字再手抄一遍：
@@ -738,8 +812,13 @@ def main() -> None:
             "bbox_wgs84": [round(float(v), 6) for v in bbox],
             "bbox_order": "west, south, east, north",
             "size_px": [int(rgba.shape[1]), int(rgba.shape[0])],
-            "cell_m": RES,
-            "crs": "EPSG:4547 -> 贴图按 WGS84 经纬度矩形铺设",
+            # 贴图现在是 4326 等经纬度网格，用"度/格"描述才有意义；
+            # 以前那个 cell_m=30 描述的是 4547 的原始像元，贴图已经不用它了，
+            # 留着只会误导（前端若拿它算分辨率会算错 3 倍）。
+            "res_deg": round(CLICK_RES_DEG, 7),
+            "crs": "EPSG:4326（等经纬度网格，与点击查询同源）",
+            "note": "贴图与点击网格同源，均为 EPSG:4326 等经纬度；bbox 即网格外接矩形，"
+                    "梯形四角（高斯-克吕格变形）在 PNG 里是透明像素",
             "levels": [
                 {"name": n, "lo": round(float(lo), 4), "hi": round(float(hi), 4), "color": c}
                 for lo, hi, n, c in levels
