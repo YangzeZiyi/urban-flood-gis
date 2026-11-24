@@ -301,6 +301,16 @@ onMounted(async () => {
     selectionIndicator: false,
   })
 
+  // 调试用：把 viewer / Cesium 挂到 window 上，浏览器控制台里可以直接操作相机。
+  // 比如 window.__viewer.camera.setView({
+  //   destination: window.__Cesium.Cartesian3.fromDegrees(114.3, 30.6, 9000),
+  // })
+  // 截图脚本（pipeline/analysis 下的 *.cjs）也靠它精确取景，不依赖模拟鼠标滚轮。
+  // Cesium 是 ESM import 进来的，不挂到 window 上，控制台里就没有这个全局变量。
+  // 生产上留着无害——只是两个全局引用，不占内存也不影响性能。
+  window.__viewer = viewer
+  window.__Cesium = Cesium
+
   // ---------------- 叠加易涝指数贴图（M3 的成果） ----------------
   // 这是"从数据到屏幕"的最后一公里：一张 PNG + 一个经纬度矩形，就这么多。
   //
@@ -545,10 +555,11 @@ onMounted(async () => {
   )
 
   // ---------------- 从后端加载易涝区 ----------------
-  // 目前库里只有 1 条第一周的测试数据（id=1「武昌火车站下穿通道」，
-  // 几何是 2km×2.2km 的方块，只为验证 PG→Spring→Cesium 链路通不通）。
-  // 它会以红色 45% 透明度压在指数贴图上，看着像"武昌站是极高风险区"。
-  // 已决定：暂留作链路证据，M5 真实易涝点入库时一起清掉（见 docs/周记.md W6）。
+  // 40 个点，来源是武汉市水务局公布的历史易涝点清单（M5-3 入库）。
+  // 每个点的几何是「以坐标为中心、半径 100 米的圆」——官方只公布点位，
+  // 不给实际积水范围，所以用统一的缓冲圈表示"这一带"，
+  // 不假装知道它到底漫到哪条街（编一个多边形面积经不起追问）。
+  // 半径 100 米用 geography 算，保证在任意纬度都是真的 100 米。
   const zones = await Cesium.GeoJsonDataSource.load('/api/zones', { clampToGround: true })
   viewer.dataSources.add(zones)
   console.log(`[易涝区] 已加载 ${zones.entities.values.length} 条`)
@@ -576,6 +587,33 @@ onMounted(async () => {
       entity.polygon.outline = true
       entity.polygon.outlineColor = color
       entity.polygon.outlineWidth = 2
+    }
+
+    // ---- 每个点再加一个"针尖" ----
+    // 为什么：100 米半径的圆，在 12 km 高空只有约 11 个像素，
+    // 40 个点散在卫星图里，和天地图自带的红色路牌（高速编号）混在一起，
+    // 第一眼根本分不出哪些是我们的数据。
+    //
+    // 关键在于 point 的 pixelSize 单位是**屏幕像素**，不随缩放变化——
+    // 这是 Cesium 里唯一天然"恒定屏幕尺寸"的图元。
+    // 多边形表达"这一带有多大"，针尖保证"任何缩放级别都看得见"，两者分工。
+    //
+    // 位置取环上 33 个顶点的平均值。我们的环是圆规画的（ST_Buffer 生成），
+    // 顶点均值就是圆心，不需要再从后端多传一个 lon/lat 字段——
+    // 数据只存一份，就不会出现"点搬家了针尖没搬"的对不齐。
+    const hierarchy = entity.polygon?.hierarchy?.getValue()
+    const ring = hierarchy?.positions
+    if (ring && ring.length) {
+      let sx = 0, sy = 0, sz = 0
+      for (const p of ring) { sx += p.x; sy += p.y; sz += p.z }
+      entity.position = new Cesium.Cartesian3(sx / ring.length, sy / ring.length, sz / ring.length)
+      entity.point = {
+        pixelSize: 7,
+        color,
+        outlineColor: Cesium.Color.WHITE, // 白边保证压在任何底图上都看得清
+        outlineWidth: 1.5,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+      }
     }
   }
 
