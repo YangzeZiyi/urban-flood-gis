@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -102,6 +104,85 @@ public class FloodIndexController {
         body.put("elev", round(cell.elev(), 1));
         body.put("slope", round(cell.slope(), 2));
         body.put("acc", Math.round(cell.acc()));
+        return ResponseEntity.ok(body);
+    }
+
+    /**
+     * 框选统计：GET /api/flood-index/stats?west=..&south=..&east=..&north=..
+     *
+     * <h3>和单点查询的区别</h3>
+     * <p>单点是"读 16 个字节"，框选是"读一片、边读边累加"。后者才是 GIS 里
+     * 最常写的代码——凡是"这块区域平均多少、各类占多少"，本质都是这个循环。</p>
+     *
+     * <h3>为什么不做成"多边形统计"</h3>
+     * <p>那是下一步（按行政区、按流域）。这一版只做矩形，因为矩形的行列范围
+     * 是连续的，一次读一大块就够；多边形要先栅格化，是另一套代码。
+     * 先把"矩形能算对"跑通，再谈形状。</p>
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> stats(
+            @RequestParam double west,
+            @RequestParam double south,
+            @RequestParam double east,
+            @RequestParam double north) {
+
+        FloodGrid g = grid();
+        if (g == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                    "status", "unavailable",
+                    "message", loadError == null ? "网格未加载" : loadError));
+        }
+        if (!(west < east) || !(south < north)) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "经纬度顺序不对：需要 west < east 且 south < north"));
+        }
+
+        FloodGrid.Summary s;
+        try {
+            s = g.summarize(west, south, east, north);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "status", "error",
+                    "message", "统计失败：" + e.getMessage()));
+        }
+
+        if (s == null) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "empty",
+                    "message", "框选范围与网格没有交集（拖到武汉市域外了）"));
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", "ok");
+        body.put("bbox", Map.of(
+                "west", round(s.west(), 6),
+                "south", round(s.south(), 6),
+                "east", round(s.east(), 6),
+                "north", round(s.north(), 6)));
+        body.put("cells", s.cells());
+        body.put("evaluated", s.evaluated());
+        body.put("no_data", s.noData());
+        body.put("area_km2", s.areaKm2());
+        body.put("bbox_km2", s.bboxKm2());
+        body.put("mean", s.mean());
+        body.put("median", s.median());
+        body.put("p90", s.p90());
+        body.put("max", s.max());
+        body.put("max_at", Map.of(
+                "lon", round(s.maxLon(), 6),
+                "lat", round(s.maxLat(), 6)));
+
+        List<Map<String, Object>> levels = new ArrayList<>();
+        for (FloodGrid.LevelStat lv : s.levels()) {
+            Map<String, Object> one = new LinkedHashMap<>();
+            one.put("name", lv.name());
+            one.put("color", lv.color());
+            one.put("km2", round(lv.km2(), 2));
+            one.put("pct", round(lv.pct(), 1));
+            levels.add(one);
+        }
+        body.put("levels", levels);
         return ResponseEntity.ok(body);
     }
 

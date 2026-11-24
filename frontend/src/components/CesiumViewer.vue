@@ -39,6 +39,37 @@ let clickHandler = null       // Cesium 事件句柄，销毁时要一起释放
 // 因子英文键 → 中文名，只为了图例底部那行字好读
 const CN = { elev: '高程', slope: '坡度', fill: '填洼', acc: '汇流' }
 
+// ---------------- 框选统计 ----------------
+// selectMode：是否处于"拖框"状态。开启时左键不再转地球，而是画矩形
+const selectMode = ref(false)
+const stats = ref(null)       // 统计结果，null = 不显示
+let rectEntity = null          // 图上那个黄色矩形
+let dragStart = null           // 拖拽起点（经纬度），null = 当前没在拖
+let suppressClickUntil = 0     // 拖完会顺带触发一次 LEFT_CLICK，用它屏蔽掉
+
+/** 数字格式化：后端在"没有有效像元"时会返回 null，别让它显示成 NaN */
+function num(v, digits = 2) {
+  return typeof v === 'number' && Number.isFinite(v) ? v.toFixed(digits) : '—'
+}
+
+/** 进入/退出框选模式 */
+function toggleSelect() {
+  selectMode.value = !selectMode.value
+  pick.value = null
+  if (!selectMode.value) {
+    // 中途退出：万一鼠标还按着，把相机控制还回去，否则地图会"卡死"
+    dragStart = null
+    if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true
+  }
+}
+
+/** Esc 退出框选。挂在 window 上而不是画布上，因为焦点可能在按钮上 */
+function onKeyDown(e) {
+  if (e.key === 'Escape' && selectMode.value) {
+    toggleSelect()
+  }
+}
+
 /**
  * 勾选框变化时调用：显隐整张贴图。
  * 为什么不用 computed 自动同步？因为 overlayLayer 是普通变量，
@@ -395,6 +426,11 @@ onMounted(async () => {
   }
 
   clickHandler.setInputAction((movement) => {
+    // 框选模式下左键是"画框"，不该弹单点卡片；
+    // 拖完手松开时 Cesium 还会补一个 LEFT_CLICK，用时间戳挡掉
+    if (selectMode.value || performance.now() < suppressClickUntil) {
+      return
+    }
     const cartesian = viewer.camera.pickEllipsoid(
       movement.position, viewer.scene.globe.ellipsoid)
     if (!cartesian) {
@@ -410,6 +446,133 @@ onMounted(async () => {
       cartesian,
     )
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+
+  // ---------------- 框选统计 ----------------
+  // 三个事件拼成一个手势：
+  //   LEFT_DOWN  记起点，顺手把相机控制关掉（否则拖框会变成转地球）
+  //   MOUSE_MOVE 实时更新矩形，让人看见自己在框哪儿
+  //   LEFT_UP    算出范围、请求后端、退出框选模式
+  //
+  // 为什么不用"Cesium 自带的矩形绘制工具"：那套是给编辑器用的，
+  // 要引入额外的 widget 样式。十几行事件就够，还能看清每一步。
+
+  /** 屏幕像素 → 经纬度。点不到地球（点到太空）时返回 null */
+  function screenToLonLat(position) {
+    const cartesian = viewer.camera.pickEllipsoid(
+      position, viewer.scene.globe.ellipsoid)
+    if (!cartesian) {
+      return null
+    }
+    const carto = Cesium.Cartographic.fromCartesian(cartesian)
+    return {
+      lon: Cesium.Math.toDegrees(carto.longitude),
+      lat: Cesium.Math.toDegrees(carto.latitude),
+    }
+  }
+
+  /** 画（或重画）那个黄色选框。每次移动都重建实体是因为 Rectangle 不能原地改坐标 */
+  function drawRect(w, s, e, n) {
+    if (rectEntity) {
+      viewer.entities.remove(rectEntity)
+    }
+    const color = Cesium.Color.fromCssColorString('#ffd33d')
+    rectEntity = viewer.entities.add({
+      rectangle: {
+        coordinates: Cesium.Rectangle.fromDegrees(w, s, e, n),
+        material: color.withAlpha(0.25),
+        outline: true,
+        outlineColor: color,
+        outlineWidth: 2,
+      },
+    })
+  }
+
+  /** 请求后端统计。参数用 6 位小数，约 0.1 m，和单点查询保持一致 */
+  async function loadStats(w, s, e, n) {
+    stats.value = { status: 'loading' }
+    const t0 = performance.now()
+    try {
+      const q = `west=${w.toFixed(6)}&south=${s.toFixed(6)}`
+        + `&east=${e.toFixed(6)}&north=${n.toFixed(6)}`
+      const resp = await fetch(`/api/flood-index/stats?${q}`)
+      const data = await resp.json()
+      stats.value = { ...data, ms: Math.round(performance.now() - t0) }
+    } catch (err) {
+      stats.value = {
+        status: 'error',
+        message: `统计失败：${err.message}。检查后端是否在跑（8080）。`,
+      }
+    }
+  }
+
+  clickHandler.setInputAction((movement) => {
+    if (!selectMode.value) {
+      return
+    }
+    const p = screenToLonLat(movement.position)
+    if (!p) {
+      return
+    }
+    dragStart = { lon: p.lon, lat: p.lat }
+    // 关键：拖框期间把相机锁住，松手时一定要还回来（见 LEFT_UP）
+    viewer.scene.screenSpaceCameraController.enableInputs = false
+    stats.value = null
+    if (rectEntity) {
+      viewer.entities.remove(rectEntity)
+      rectEntity = null
+    }
+  }, Cesium.ScreenSpaceEventType.LEFT_DOWN)
+
+  clickHandler.setInputAction((movement) => {
+    if (!dragStart) {
+      return
+    }
+    const p = screenToLonLat(movement.position)
+    if (!p) {
+      return
+    }
+    // 起点可能比终点更东/更北，四个值都要 min/max 一次，
+    // 直接拿 start/end 当 west/north 会画出"负宽度"的框，Cesium 不报错但什么都不显示
+    drawRect(
+      Math.min(dragStart.lon, p.lon),
+      Math.min(dragStart.lat, p.lat),
+      Math.max(dragStart.lon, p.lon),
+      Math.max(dragStart.lat, p.lat),
+    )
+  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+
+  clickHandler.setInputAction((movement) => {
+    if (!dragStart) {
+      return
+    }
+    const start = dragStart
+    dragStart = null
+    viewer.scene.screenSpaceCameraController.enableInputs = true
+    suppressClickUntil = performance.now() + 300
+
+    const p = screenToLonLat(movement.position)
+    if (!p) {
+      return
+    }
+    const w = Math.min(start.lon, p.lon)
+    const e = Math.max(start.lon, p.lon)
+    const s = Math.min(start.lat, p.lat)
+    const n = Math.max(start.lat, p.lat)
+
+    // 0.002° 在武汉约 200 m。太小的框多半是"手滑点了一下"，
+    // 统计出来只有几格，还会让人以为程序算错了
+    if (e - w < 0.002 || n - s < 0.002) {
+      stats.value = { status: 'error', message: '框太小了，至少拖出 200 米见方' }
+      return
+    }
+
+    drawRect(w, s, e, n)
+    selectMode.value = false
+    loadStats(w, s, e, n)
+  }, Cesium.ScreenSpaceEventType.LEFT_UP)
+
+  // Esc 退出框选：拖到一半反悔时用
+  window.addEventListener('keydown', onKeyDown)
 })
 
 // 组件销毁时一定要 destroy，否则 GPU 显存不释放，热更新几次浏览器就崩了。
@@ -420,7 +583,11 @@ onBeforeUnmount(() => {
     clickHandler.destroy()
     clickHandler = null
   }
+  window.removeEventListener('keydown', onKeyDown)
+  // 拖框时把相机锁住了，组件销毁前必须还回来，
+  // 否则下一个页面的地图会完全不能拖动（看起来像"卡死"）
   if (viewer && !viewer.isDestroyed()) {
+    viewer.scene.screenSpaceCameraController.enableInputs = true
     viewer.destroy()
     viewer = null
   }
@@ -454,6 +621,54 @@ onBeforeUnmount(() => {
 <template>
   <!-- ref="container" 把这个 div 的 DOM 交给上面的 container 变量 -->
   <div ref="container" class="cesium-container">
+    <!-- 工具栏：目前只有一个按钮，将来"刷新图层""导出"都往这里加 -->
+    <div class="tools">
+      <button :class="['tool-btn', { active: selectMode }]" @click="toggleSelect">
+        {{ selectMode ? '退出框选' : '框选统计' }}
+      </button>
+    </div>
+
+    <p v-if="selectMode" class="hint">
+      按住左键拖出一个矩形，统计框内的风险构成（Esc 退出）
+    </p>
+
+    <!-- 框选统计结果 -->
+    <aside v-if="stats" class="stats">
+      <button class="pick-close" title="关闭" @click="stats = null">×</button>
+      <div class="stats-head">框选统计</div>
+
+      <p v-if="stats.status === 'loading'" class="pick-msg">统计中…</p>
+      <p v-else-if="stats.status !== 'ok'" class="pick-msg">{{ stats.message }}</p>
+
+      <template v-else>
+        <div class="stats-num">
+          <div><b>{{ num(stats.mean, 3) }}</b><span>平均</span></div>
+          <div><b>{{ num(stats.median, 3) }}</b><span>中位</span></div>
+          <div><b>{{ num(stats.max, 3) }}</b><span>最高</span></div>
+        </div>
+
+        <!-- 堆叠条：五档占比拼成一条，比五个数字更快看出结构 -->
+        <div class="bar">
+          <i v-for="lv in stats.levels" :key="lv.name"
+             :style="{ width: lv.pct + '%', background: lv.color }"></i>
+        </div>
+
+        <ul class="stats-rows">
+          <li v-for="lv in stats.levels" :key="lv.name">
+            <i :style="{ background: lv.color }"></i>
+            <span>{{ lv.name }}</span>
+            <b>{{ lv.km2.toFixed(1) }} km² · {{ lv.pct.toFixed(1) }}%</b>
+          </li>
+        </ul>
+
+        <p class="legend-foot">
+          框内 {{ stats.bbox_km2.toFixed(1) }} km²，其中参与评价
+          {{ stats.area_km2.toFixed(1) }} km²；水体与市域外
+          {{ stats.no_data.toLocaleString() }} 格不计 · {{ stats.ms }} ms
+        </p>
+      </template>
+    </aside>
+
     <!--
       图例浮层：和 App.vue 里那块状态面板同一套配色变量（--panel 等）。
       为什么要放在这个组件里而不是 App.vue？
@@ -513,6 +728,142 @@ onBeforeUnmount(() => {
   height: 100%;
   background: #000;
   overflow: hidden;
+}
+
+/* ---------- 框选工具 ---------- */
+.tools {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 22;
+}
+
+.tool-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.tool-btn:hover {
+  border-color: var(--accent);
+}
+
+/* 激活时整颗按钮变黄：让人一眼知道"现在拖鼠标是在画框，不是转地球" */
+.tool-btn.active {
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #ffd33d;
+  border-color: #ffd33d;
+}
+
+.hint {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 22;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: #ffd33d;
+  white-space: nowrap;
+  background: rgba(20, 24, 30, 0.82);
+  border: 1px solid rgba(255, 211, 61, 0.35);
+  border-radius: 999px;
+  transform: translateX(-50%);
+  pointer-events: none;    /* 别挡住下面的画布 */
+}
+
+/* ---------- 框选统计卡片 ---------- */
+.stats {
+  position: absolute;
+  top: 56px;
+  right: 16px;
+  z-index: 21;
+  width: 236px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.stats-head {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.stats-num {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.stats-num div {
+  flex: 1;
+  padding: 6px 0;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+}
+
+.stats-num b {
+  display: block;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-num span {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.bar {
+  display: flex;
+  height: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+}
+
+.stats-rows {
+  list-style: none;
+}
+
+.stats-rows li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.stats-rows i {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.stats-rows span {
+  flex: 1;
+}
+
+.stats-rows b {
+  font-weight: 400;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- 图例 ---------- */
