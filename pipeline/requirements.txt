@@ -12,6 +12,7 @@ lxml>=5.0.0
 # --- 数据处理 ---
 pandas>=2.2.0
 numpy>=1.26.0
+scipy>=1.11.0        # ndimage.label：水体掩膜的连通域标记
 
 # --- 空间数据处理（核心）---
 geopandas>=1.0.0
