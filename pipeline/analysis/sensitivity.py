@@ -30,7 +30,7 @@ import flood_index as fi          # noqa: E402  复用归一化/合成，保证�
 DEM_DIR = PROJECT_DIR / "data" / "processed" / "dem"
 IMG_DIR = PROJECT_DIR / "docs" / "images"
 
-# 三套方案：你的、参考的地形主导、参考的平权
+# 三套方案：当前取值、参考的地形主导、参考的平权
 SCHEMES = {
     "C 汇流主导（当前）": {"elev": 0.20, "slope": 0.15, "fill": 0.15, "acc": 0.50},
     "B 地形主导":         {"elev": 0.30, "slope": 0.25, "fill": 0.15, "acc": 0.30},

@@ -103,47 +103,38 @@ def classify(mm: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# ★ TODO 1：统计转移频次矩阵 ★
+# 统计转移频次矩阵
 # ---------------------------------------------------------------------------
 def count_transitions(states: np.ndarray) -> np.ndarray:
     """返回 5×5 整数矩阵 counts，counts[i][j] = "昨天 i 态、今天 j 态"出现过的次数。
 
-    要填的只有循环体里两件事：
-      (1) 取出相邻两天：for t in range(len(states) - 1):
-      (2) 在矩阵对应位置 +1：counts[ 昨天的状态 ][ 今天的状态 ] += 1
-    最后一天没有"明天"，循环到 len-1 就停，别越界。
-
-    提示：本文件顶部已经 import numpy as np，zeros 的写法是
-          counts = np.zeros((N, N), dtype=np.int64)
+    相邻两天两两配对：t 从 0 到 len(states)-2，把 counts[states[t], states[t+1]] 加 1。
+    最后一天没有"明天"，循环到 len-1 就停，不会越界。
     """
     counts = np.zeros((N, N), dtype=np.int64)
 
-    # ---- 在这里写你的两行 ----
-    # 注意：t 是"第几天"（0..n-2），states[t] 才是"哪一态"。
-    # 原写法 counts[i][j] 把这两个概念混在了一起：i / j 从没被赋值过，
-    # 而且就算赋了值，用"第几天"当下标去累加，统计的也不是转移次数。
+    # t 是"第几天"（0..n-2），states[t] 才是"哪一态"。
+    # 两个下标都必须取状态值，不能用"第几天"去当矩阵下标，否则统计的不是转移次数。
     for t in range(len(states) - 1):
         counts[states[t], states[t + 1]] += 1
     return counts
 
 
 # ---------------------------------------------------------------------------
-# ★ TODO 2：把频次矩阵按行归一化成概率矩阵 ★
+# 频次矩阵按行归一化成概率矩阵
 # ---------------------------------------------------------------------------
 def normalize_rows(counts: np.ndarray) -> np.ndarray:
-    """counts[i][j] / counts[i].sum() -> P[i][j]，每一行加起来必须等于 1。
+    """counts[i][j] / counts[i].sum() -> P[i][j]，每一行加起来等于 1。
 
     两个坑：
       (1) 某个状态一次都没出现过时，这一行全是 0，除下去会得到 NaN。
-          本数据集五态都有，但你得想清楚"万一没有"该怎么处理，写一行注释说明。
+          本数据集五态都有，这里仍用 where= 保住这种行，不让它污染后面。
       (2) 要用浮点除。Python 里 3/2 = 1.5，但 numpy 的整数数组相除要注意
           先 astype(float)，否则在某些写法下会整除。
     """
     P = np.zeros((N, N), dtype=np.float64)
 
-    # ---- 在这里写你的归一化 ----
-    # 原写法 P[i][j] = ... 缺循环：5×5 = 25 个格子，不写循环只能算一个格子，
-    # 而且 i / j 同样没定义。这里直接用 numpy 的按行广播，一次算完 25 个。
+    # 用 numpy 的按行广播，一次算完 25 个格子。
     row = counts.sum(axis=1, keepdims=True).astype(np.float64)
     # where=row > 0：万一某个状态在序列里从没出现过，那一行保留 0，
     # 而不是让 0/0 变成 NaN —— NaN 会顺着后面的矩阵乘方污染整条链。
@@ -152,7 +143,7 @@ def normalize_rows(counts: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# 以下是跑通的工具函数，不需要你改
+# 以下工具函数
 # ---------------------------------------------------------------------------
 def matrix_power(P: np.ndarray, n: int) -> np.ndarray:
     """P 的 n 次幂：n 步之后各状态的概率分布。"""
@@ -196,7 +187,7 @@ def self_test() -> bool:
     print(f"  counts[0] = {c[0]}  （期望 [2 2 0 0 0]）")
     print(f"  counts[1] = {c[1]}  （期望 [1 0 0 0 0]）")
     print(f"  P[0]      = {np.round(P[0], 3)}  （期望 [0.5 0.5 0 0 0]）")
-    print(f"  {'✓ 通过' if ok else '✗ 不通过 —— 先修 TODO 1 / 2 再看后面的结果'}")
+    print(f"  {'✓ 通过' if ok else '✗ 不通过 —— 先修 count_transitions / normalize_rows 再看后面的结果'}")
     return ok
 
 

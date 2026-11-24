@@ -101,35 +101,34 @@ API_DECAY = 0.9
 API_WARMUP_DAYS = 40
 
 # ---------------------------------------------------------------------------
-# ★ 待填常量：和下面的 TODO 1 / TODO 2 一起填 ★
+# 三个门槛常量：降雨强度 -> 放大系数的分段依据
 #
-#   （本节三个数 + 两个函数，正好五个空。check_todo 会一起校验。）
 #   单位都是 mm（前期降雨指数，不是当日雨量；所以它的量级是"累积"出来的，
 #   连续下一周暴雨能到 1000 以上）。
 #
 #   API_DRY_MAX —— 低于这个值**完全不放大**，系数 = 1.0。
 #       含义："地还是干的，这场雨只是把地浇湿，静态图原样即可"。
-#       参考：取 API 序列的 p50 附近（一半的日子都不放大）。
-#       填 0 是错的（等于每一滴雨都要放大），所以下面给了 0.0 占位，check_todo 会拦住。
+#       取值：API 序列的 p50 附近（一半的日子都不放大）。
+#       取 0 是错的（等于每一滴雨都要放大），self_check 会拦住。
 #
 #   API_WET_MIN —— 高于这个值**放大到顶**，系数 = FACTOR_MAX。
 #       含义："土壤已经泡透，再多下也不改变它已经饱和这件事"。
-#       参考：取 API 序列的 p90~p95 附近（只有最湿的那几天顶格）。
+#       取值：API 序列的 p90~p95 附近（只有最湿的那几天顶格）。
 #
-#   两个门槛怎么找？把这一行临时加到 main() 里 api_series() 之后：
+#   两个门槛的取法：在 main() 里 api_series() 之后临时打一行
 #       print("API 分位", np.percentile(api_all, [50, 90, 95, 99]))
-#   打出来的三个数就是"干 / 湿 / 很湿"的分界，抄进来即可（跑完记得删掉这行）。
+#   三个分位就是"干 / 湿 / 很湿"的分界。
 #   注意 API_WET_MIN 必须 > API_DRY_MAX，否则 rain_factor 的分母是负的。
 #
 #   FACTOR_MAX —— 最大放大倍数（无量纲，1.0~3.0 之间）。
-#       参考：1.5 = 最湿时风险最多涨一半（保守）；
-#             2.5 = 最湿时静态指数 0.4 的地方能顶到 1.0（激进，图会很红）。
-#       挑它的标准不是"准"（我们没有实测渍水点做标定），是"能不能自圆其说"：
-#       它本质是在说"饱和土壤把致涝机会放大了几倍"。这句话你信几倍，就填几倍。
+#       1.5 = 最湿时风险最多涨一半（保守）；
+#       2.5 = 最湿时静态指数 0.4 的地方能顶到 1.0（激进，图会很红）。
+#       取值标准不是"准"（没有实测渍水点做标定），而是"能不能自圆其说"：
+#       它本质是在说"饱和土壤把致涝机会放大了几倍"。
 # ---------------------------------------------------------------------------
-API_DRY_MAX = 30.0          # <- 改这里（mm）
-API_WET_MIN = 500.0         # <- 改这里（mm）
-FACTOR_MAX = 2.0            # <- 改这里（倍数）
+API_DRY_MAX = 30.0          # mm
+API_WET_MIN = 500.0         # mm
+FACTOR_MAX = 2.0            # 倍数
 
 # 贴图每档的透明度。0 号是"低"：完全透明，否则整张图糊成一块灰。
 # 为什么不按风险值连续算 alpha？等级图要能一眼数清"几个档"，连续 alpha 会骗眼睛。
@@ -199,7 +198,7 @@ def load_rain(start: str | None = None, end: str | None = None):
             seen.add(k)
             dates.append(k)
 
-    # 缺失的 (日期, 站点) 组合填 0：当作那天没下雨。
+    # 缺失的 (日期, 站点) 组合记 0：当作那天没下雨。
     # 为什么是 0 不是 NaN？NaN 会顺着 API 递推污染后面所有天；
     # 0 只会让那一天偏低，误差随时间衰减（0.9^n）。
     # 本数据集 5 站 8 年连续无缺，所以这条只是兜底。
@@ -313,12 +312,12 @@ def idw_field(values: np.ndarray, sxy: np.ndarray, shape: tuple[int, int],
 
 
 # ---------------------------------------------------------------------------
-# ★ TODO 1：降雨强度 -> 放大系数 ★
+# 降雨强度 -> 放大系数（线性段 + 上限截断）
 # ---------------------------------------------------------------------------
 def rain_factor(api: np.ndarray) -> np.ndarray:
     """把前期降雨指数（mm）映射成 [1.0, FACTOR_MAX] 的放大系数。
 
-    要求：
+    映射规则：
       1. api <= API_DRY_MAX   ->  1.0          （地是干的，不放大，保持静态图原样）
       2. api >= API_WET_MIN   ->  FACTOR_MAX   （地已饱和，放大到顶）
       3. 中间单调过渡，而且必须是**直线**——我们没有任何实测渍水点去标定一条曲线，
@@ -326,8 +325,8 @@ def rain_factor(api: np.ndarray) -> np.ndarray:
       4. 返回 float32，形状与输入相同
       5. 全程不能出现 NaN；api 里万一有 NaN，也要给出 1.0 而不是把 NaN 传下去
 
-    提示：整体思路和 flood_index.normalize 是同一套——先把输入换算成"以门槛为界的
-          相对位置"，再线性拉伸到目标区间。
+    思路与 flood_index.normalize 一致：先把输入换算成"以门槛为界的相对位置"，
+    再线性拉伸到目标区间。
 
     为什么系数不可能 < 1？降雨只会让风险变大，不会"变好"。
     系数 = 1 的那一档必须严格等于静态图，否则"没下雨的一天"和 M3 的成果对不上，
@@ -371,12 +370,12 @@ def rain_factor(api: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# ★ TODO 2：地形 × 降雨，两个方案选一个 ★
+# 地形 × 降雨：静态指数与放大系数的合成
 # ---------------------------------------------------------------------------
 def combine(index_base: np.ndarray, factor: np.ndarray) -> np.ndarray:
     """把静态易涝指数和降雨放大系数合成为动态风险，值域 [0, 1]。
 
-    下面两个方案都在数学上说得通，选一个（或写你自己的），并把理由写进注释。
+    下面两个方案都在数学上说得通，本文件采用的是乙（见函数体注释）。
 
     ---- 甲：乘性（最简单） ----
         risk = min(index × factor, 1)
@@ -400,7 +399,7 @@ def combine(index_base: np.ndarray, factor: np.ndarray) -> np.ndarray:
     注意：无论选哪个，都必须让 factor = 1 时结果等于 index_base；
     也必须保持 NaN 是 NaN（水体/市域外不参与，别被填成 0）。
 
-    上面是数学写法。落到 numpy 要自己翻译：「min(·, 1)」对应哪个函数、
+    上面是数学写法。落到 numpy 要换成对应的函数：「min(·, 1)」是 np.minimum，
     「^」在 Python 里是 **（星号两遍）不是 ^ —— ^ 是位异或，写下去不报错，
     但结果全错，而且错得很像真的。
     """
@@ -439,19 +438,19 @@ def combine(index_base: np.ndarray, factor: np.ndarray) -> np.ndarray:
 # ---------------------------------------------------------------------------
 # 校验与自检
 # ---------------------------------------------------------------------------
-def check_todo() -> None:
-    """三个常量和两个函数填了没有？没填就立刻停下，别让它静默算出错答案。
+def self_check() -> None:
+    """三个常量和两个函数是否就绪？不就绪就立刻停下，别让它静默算出错答案。
 
     为什么单独写一个函数？因为"系数恒等于 1.0 的图"看起来完全正常——
     它和静态图一模一样，没有人会怀疑。错要错得响亮。
     """
     bad = []
     if API_DRY_MAX <= 0.0:
-        bad.append("API_DRY_MAX 还是 0.0：这是「干湿分界」，从 API 序列的 p50 附近开始试")
+        bad.append("API_DRY_MAX 必须 > 0：这是「干湿分界」，取 API 序列的 p50 附近")
     if API_WET_MIN <= 0.0:
-        bad.append("API_WET_MIN 还是 0.0：这是「饱和门槛」，从 API 序列的 p90~p95 附近开始试")
+        bad.append("API_WET_MIN 必须 > 0：这是「饱和门槛」，取 API 序列的 p90~p95 附近")
     if FACTOR_MAX <= 0.0:
-        bad.append("FACTOR_MAX 还是 0.0：最大放大倍数，参考 1.5~2.5")
+        bad.append("FACTOR_MAX 必须 > 0：最大放大倍数，参考 1.5~2.5")
     if API_DRY_MAX > 0.0 and API_WET_MIN > 0.0 and API_WET_MIN <= API_DRY_MAX:
         bad.append(f"API_WET_MIN({API_WET_MIN}) 必须大于 API_DRY_MAX({API_DRY_MAX})，"
                    "否则 rain_factor 的斜率是负的，雨越大风险越小")
@@ -460,26 +459,26 @@ def check_todo() -> None:
     try:
         rain_factor(probe)
     except NotImplementedError:
-        bad.append("rain_factor() 函数体还是 raise NotImplementedError（TODO 1）")
-    except Exception as exc:                     # 填了但写错（除零、广播失败…）
-        bad.append(f"rain_factor() 填了但跑不通：{exc!r}")
+        bad.append("rain_factor() 未实现（raise NotImplementedError）")
+    except Exception as exc:                     # 写了但写错（除零、广播失败…）
+        bad.append(f"rain_factor() 跑不通：{exc!r}")
 
     idx = np.linspace(0.0, 1.0, 11).astype(np.float32)
     try:
         combine(idx, np.full_like(idx, 1.0))
     except NotImplementedError:
-        bad.append("combine() 函数体还是 raise NotImplementedError（TODO 2，甲乙都没选）")
+        bad.append("combine() 未实现：甲/乙两个方案都没选")
     except Exception as exc:
-        bad.append(f"combine() 填了但跑不通：{exc!r}")
+        bad.append(f"combine() 跑不通：{exc!r}")
 
     if bad:
         print("=" * 78)
-        print("先别跑：还有 %d 处没填" % len(bad))
+        print("先别跑：还有 %d 处不满足" % len(bad))
         print("=" * 78)
         for i, msg in enumerate(bad, 1):
             print(f"  {i}. {msg}")
         print()
-        print("  填完之后：python process/risk_dynamic.py --only-test")
+        print("  修完之后：python process/risk_dynamic.py --only-test")
         sys.exit(1)
 
 
@@ -528,7 +527,7 @@ def self_test() -> bool:
     check(f"端到端单调：api 0->500，风险 {risks[0]:.3f} -> {risks[-1]:.3f}", cond_e2e)
 
     if not ok:
-        print("\n    ✗ 有检查没过 —— 先修 TODO（rain_factor / combine / 三个常量）再跑真实数据")
+        print("\n    ✗ 有检查没过 —— 先修 self_check 报的项（rain_factor / combine / 三个常量）再跑真实数据")
     return bool(ok)
 
 
@@ -853,11 +852,11 @@ def main() -> None:
 
     t_all = time.time()
     print("=" * 78)
-    print("第 0 步：读配置 + 校验 TODO")
+    print("第 0 步：读配置 + 校验常量")
     print("=" * 78)
     load_env(ENV_FILE)                       # 复用 markov_rain 的 .env 读取
-    check_todo()                             # 没填就 sys.exit，print 里已经说清该填哪个
-    print("  ✓ 三个常量已填："
+    self_check()                             # 不满足就 sys.exit，print 里已经说清是哪一项
+    print("  ✓ 三个常量："
           f"API_DRY_MAX={API_DRY_MAX:,.1f} mm  API_WET_MIN={API_WET_MIN:,.1f} mm  "
           f"FACTOR_MAX={FACTOR_MAX:.2f}")
 
@@ -932,7 +931,7 @@ def main() -> None:
         api_grid = idw_field(api_all[i], sxy, shape)         # 5 站 -> 全幅面
         factor = rain_factor(api_grid)                       # 面 -> 放大系数
         if not np.isfinite(factor).all():
-            sys.exit(f"[错误] {day} 的 rain_factor 输出了 NaN，检查你的映射有没有除零")
+            sys.exit(f"[错误] {day} 的 rain_factor 输出了 NaN，检查映射里有没有除零")
         risk = combine(index_base, factor)                   # 静态 × 降雨
         risk = np.where(np.isfinite(index_base), risk, np.nan).astype(np.float32)
 
