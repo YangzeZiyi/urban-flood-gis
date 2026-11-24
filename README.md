@@ -32,24 +32,27 @@ urban-flood-gis/
 ├── README.md                 本文件
 ├── .gitignore                版本控制忽略规则
 ├── docs/                     项目文档
-│   ├── 方案/                 开发方案、排期
 │   ├── 教程/                 环境安装图解、代码讲解
+│   ├── images/               各环节成果图
 │   ├── 架构说明.md           模块与技术细节
 │   ├── 数据说明.md           数据来源与字段定义
+│   ├── 环境与路径规划.md     工具版本、安装路径、C 盘保护
 │   └── 周记.md               每周进度记录
 ├── backend/                  Spring Boot 后端（M4 模块）
 ├── frontend/                 Vue3 + Cesium 前端（M6 模块）
 ├── pipeline/                 Python 数据处理（M1 / M2 模块）
 │   ├── fetch/                数据采集脚本
 │   ├── process/              空间处理脚本
+│   ├── analysis/             诊断与敏感性分析
 │   └── requirements.txt      Python 依赖清单
 ├── sql/                      数据库脚本
 │   ├── 01_schema.sql         建表 + 空间索引
-│   └── 02_views.sql          常用视图与查询
-├── data/                     数据目录（不进 Git）
-│   ├── raw/                  原始数据：爬取的降雨、DEM、OSM
+│   ├── 02_views.sql          常用视图与查询
+│   └── floodgis_demo.dump    演示用数据库备份
+├── data/                     数据目录（不进 Git，本地生成）
+│   ├── raw/                  原始数据：DEM 分幅、降雨、行政边界
 │   ├── clean/                清洗后数据：统一坐标系的 GeoJSON / CSV
-│   └── output/               处理产物：风险栅格 GeoTIFF、易涝区矢量
+│   └── processed/            处理产物：派生栅格、易涝指数网格、风险帧
 ├── scripts/                  一键脚本
 │   ├── start-backend.bat     启动后端
 │   ├── start-frontend.bat    启动前端
@@ -57,8 +60,8 @@ urban-flood-gis/
 │   ├── build-demo.bat        打包本机演示包（前端 dist 打进 jar）
 │   ├── 启动演示.bat          双击即可演示，无需服务器
 │   └── 演示包说明.txt        演示包的使用与排错说明
-├── assets/                   截图、架构图、演示视频封面
-└── notes/                    学习笔记、踩坑记录
+├── assets/                   素材暂存
+└── notes/                    随手记录
 ```
 
 ---
