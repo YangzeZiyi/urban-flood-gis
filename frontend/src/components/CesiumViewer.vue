@@ -364,6 +364,10 @@ onMounted(async () => {
   )
 
   // ---------------- 从后端加载易涝区 ----------------
+  // 目前库里只有 1 条第一周的测试数据（id=1「武昌火车站下穿通道」，
+  // 几何是 2km×2.2km 的方块，只为验证 PG→Spring→Cesium 链路通不通）。
+  // 它会以红色 45% 透明度压在指数贴图上，看着像"武昌站是极高风险区"。
+  // 已决定：暂留作链路证据，M5 真实易涝点入库时一起清掉（见 docs/周记.md W6）。
   const zones = await Cesium.GeoJsonDataSource.load('/api/zones', { clampToGround: true })
   viewer.dataSources.add(zones)
   console.log(`[易涝区] 已加载 ${zones.entities.values.length} 条`)
