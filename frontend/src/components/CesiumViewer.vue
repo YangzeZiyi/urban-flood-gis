@@ -8,7 +8,7 @@
  * <script setup> 是 Vue 3 的语法糖：里面定义的变量、函数、导入的组件，
  * 模板里都能直接用，不用 return、不用注册。
  */
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import * as Cesium from 'cesium'
 
 // ref(值) 创建一个"响应式引用"。DOM 元素绑定到它之后，
@@ -52,11 +52,35 @@ function num(v, digits = 2) {
   return typeof v === 'number' && Number.isFinite(v) ? v.toFixed(digits) : '—'
 }
 
+/**
+ * 把选框从地球上摘掉。
+ * 三个地方会调用：关卡片、重新进入框选、新一次按下鼠标。
+ * 注意 viewer 可能已经被销毁（热更新时先跑卸载钩子），所以要先判活。
+ */
+function clearRect() {
+  if (rectEntity && viewer && !viewer.isDestroyed()) {
+    viewer.entities.remove(rectEntity)
+  }
+  rectEntity = null
+}
+
+// 卡片一关，就说明这次框选结束了，框也该跟着走。
+// 不这么做的话，每关一次卡片就在地图上留一个半透明方块：
+// 黄色 0.25 压在红色指数上会变成橙红色，看起来像"这片区域特别危险"，
+// 而不是"我用鼠标框过这里"——这是最坑的一类 bug，因为图还能看，只是看错了。
+watch(stats, (v) => {
+  if (!v) clearRect()
+})
+
 /** 进入/退出框选模式 */
 function toggleSelect() {
   selectMode.value = !selectMode.value
   pick.value = null
-  if (!selectMode.value) {
+  if (selectMode.value) {
+    // 重新进入框选：上一轮的卡片和框都过期了，先擦干净再让人画新的
+    stats.value = null
+    clearRect()
+  } else {
     // 中途退出：万一鼠标还按着，把相机控制还回去，否则地图会"卡死"
     dragStart = null
     if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true
@@ -516,11 +540,9 @@ onMounted(async () => {
     dragStart = { lon: p.lon, lat: p.lat }
     // 关键：拖框期间把相机锁住，松手时一定要还回来（见 LEFT_UP）
     viewer.scene.screenSpaceCameraController.enableInputs = false
+    // 上一轮的卡片和框先清掉，不然拖的时候新旧两个框叠在一起
     stats.value = null
-    if (rectEntity) {
-      viewer.entities.remove(rectEntity)
-      rectEntity = null
-    }
+    clearRect()
   }, Cesium.ScreenSpaceEventType.LEFT_DOWN)
 
   clickHandler.setInputAction((movement) => {
