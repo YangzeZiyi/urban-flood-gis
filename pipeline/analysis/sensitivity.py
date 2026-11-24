@@ -55,14 +55,22 @@ def load_factors():
 
 
 def build_land(raw, shape):
-    """陆地掩膜：四因子有效 + 在市域内 + 不是水体。"""
+    """陆地掩膜：四因子有效 + 在市域内 + 不是水体。
+
+    水体这块必须调 fi.water_mask()，不能在这里重写一遍判据。
+    教训：本文件原来手抄的是旧判据 `elev<=WATER_ELEV_MAX & slope<WATER_SLOPE_MAX`，
+    flood_index 把阈值从 22 m 改到 35 m、并加上填深和连通域之后，这里没跟着改，
+    于是"高程<35 且坡度<0.1"把 1,300 km² 的平地也当水剔掉了——
+    同一套阈值，抄第二遍就开始骗人。
+    """
     import rasterio
     valid = (np.isfinite(raw["elev"]) & np.isfinite(raw["slope"])
              & np.isfinite(raw["acc"]))
     with rasterio.open(DEM_DIR / "wuhan_dem_cgcs2000.tif") as ds:
         m_city = fi.city_mask(shape, ds.transform)
-    water = (raw["elev"] <= fi.WATER_ELEV_MAX) & (raw["slope"] < fi.WATER_SLOPE_MAX)
-    return valid & m_city & ~water
+    valid = valid & m_city
+    water = fi.water_mask(raw["elev"], raw["slope"], raw["fill"], valid)
+    return valid & ~water
 
 
 def top_mask(a, land, frac=TOP_FRAC):
