@@ -97,4 +97,76 @@
         </plugins>
     </build>
 
+    <!--
+      ========================================================================
+       演示打包专用 profile：把已经构建好的前端产物塞进 jar
+      ========================================================================
+      为什么要做这件事？
+
+      演示机上不允许再装 Node / 起 Vite。我们希望的最终形态是
+      “一个 jar + 一个 bat，双击就跑”。Spring Boot 内嵌的 Tomcat 本身就能
+      提供静态文件：它默认把 classpath 下的 /static/ 目录当作静态资源根，
+      也就是 jar 里的 BOOT-INF/classes/static/。
+      所以只要把 frontend/dist 的内容复制到 target/classes/static，
+      前端就变成了 jar 的一部分——启动顺序、跨域、端口全都不需要再操心。
+
+      为什么用 copy-resources 而不是 frontend-maven-plugin 去跑 npm？
+      因为演示机没有 Node，打包只在开发机上做一次。把“构建前端”和“打包后端”
+      分成两步（先 npm run build，再 mvn package），出错时更容易定位是哪一步的问题。
+
+      为什么必须放在 profile 里，而不是直接写进 <build><plugins>？
+
+      copy-resources 在源目录不存在时会直接让构建失败。
+      没跑过 npm run build 的人（比如刚 clone 仓库的同事、CI 上的单元测试流水线）
+      执行 mvn package 就会挂在一个和 Java 毫无关系的错误上。
+      用 <activation><file> 按“frontend/dist/index.html 是否存在”自动开关，
+      行为就变成：
+        · dist 在   -> 打进 jar，得到一个自包含的演示包
+        · dist 不在 -> 只打后端，构建照常成功，零影响
+      这个 profile 不需要 -P 手动指定，Maven 自己判断。
+      ========================================================================
+    -->
+    <profiles>
+        <profile>
+            <id>with-frontend</id>
+            <activation>
+                <file>
+                    <!-- 用 index.html 作为“前端构建完成”的标志，比判断目录更可靠：
+                         空目录也可能被 IDE 或空跑的命令意外创建出来 -->
+                    <exists>${project.basedir}/../frontend/dist/index.html</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <!-- process-resources 在 compile 之前，
+                                     保证后面打 jar 时 target/classes/static 已经就位 -->
+                                <id>copy-frontend-dist</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}/../frontend/dist</directory>
+                                            <!-- 连空目录一起复制，Cesium 的 Worker/Assets 里有层级较深
+                                                 的空目录；不复制会让某些运行时路径 404 -->
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

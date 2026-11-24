@@ -11,6 +11,13 @@ data/
 *.prj
 *.zip
 
+# ===== 演示包产物（可一键重建，不入库）=====
+# release/ 是 scripts/build-demo.bat 的输出：34 MB 的肥 jar + 数据库备份。
+# 二进制产物进版本库只会让每次 clone 变慢，而且没有 diff 可看。
+# 需要复现就重新跑一次打包脚本，源码和 sql/floodgis_demo.dump 都在库里。
+release/
+.tmp_enc_test/
+
 # ===== Python =====
 __pycache__/
 *.py[cod]

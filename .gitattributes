@@ -1,0 +1,7 @@
+# 批处理文件强制 CRLF 换行。
+# 为什么单拎出来写这一条：cmd.exe 解析 .bat 时按"一字符一字节"计算读取偏移，
+# 而这两份脚本是 GBK 编码（汉字 2 字节）。如果仓库里存成 LF、又被以某种方式
+# 检出成 LF，goto 标签和括号块在部分 Windows 版本上会出现诡异行为。
+# 显式声明 eol=crlf，保证任何人 clone 下来双击就能跑。
+*.bat text eol=crlf
+*.cmd text eol=crlf
