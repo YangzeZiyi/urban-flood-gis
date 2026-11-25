@@ -110,7 +110,12 @@ const postgisShort = computed(() => {
           <li v-if="health?.dataset"><span>数据集</span><b>{{ health.dataset }}</b></li>
         </ul>
         <p v-if="error" class="err">{{ error }}</p>
-        <p v-else class="tip">拖动旋转 · 滚轮缩放 · 右键平移</p>
+        <template v-else>
+          <p class="tip">拖动旋转 · 滚轮缩放 · 右键平移</p>
+          <!-- 这张图是"地形 + 降雨"推出来的易涝可能性，不是实测积水深度，
+               也不是防汛指令。写清楚，比让人误读成预警地图要好。 -->
+          <p class="tip note">数据仅用于技术演示，不作防汛决策依据</p>
+        </template>
       </aside>
     </main>
   </div>
@@ -267,5 +272,12 @@ const postgisShort = computed(() => {
   font-size: 11px;
   color: var(--bad);
   line-height: 1.6;
+}
+
+/* 免责那句要比操作提示更轻，否则面板会被文字压沉 */
+.tip.note {
+  margin-top: 4px;
+  font-size: 10px;
+  opacity: 0.65;
 }
 </style>
