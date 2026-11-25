@@ -339,6 +339,18 @@ function rainOf(f) {
 // 只有 VITE_ 开头的变量才会被注入，避免把服务器密钥误打到前端
 const TDT_KEY = import.meta.env.VITE_TDT_KEY
 
+/**
+ * 瓦片 URL 的版本位。**改过 key 或域名白名单之后，必须把这里 +1。**
+ *
+ * 天地图失败时返回的是 403，而这个 403 带着 `Cache-Control: max-age=432000`
+ * —— 整整 5 天。浏览器会老老实实把它缓存住：之后每一次刷新都直接命中那份 403，
+ * 页面永远停在离线底图上，看起来像"改完白名单也没用"。
+ *
+ * 加一个常量参数当版本位，换掉之后 URL 就变了，浏览器当新资源去取，旧 403 自动作废。
+ * 平时不要动它：一动就等于让所有访客重新下一遍瓦片。
+ */
+const TDT_TILE_VERSION = 2
+
 if (!TDT_KEY) {
   // 没配 key 时地球会是空白的，很容易误以为是代码坏了，这里给一条明确提示
   console.error('[天地图] 没有读到 VITE_TDT_KEY，请在 frontend/.env 里配置后重启 dev server')
@@ -363,7 +375,8 @@ function tiandituLayer(layer, path) {
       `?service=wmts&request=GetTile&version=1.0.0` +
       `&LAYER=${layer}&tileMatrixSet=w` +
       `&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}` +
-      `&style=default&format=tiles&tk=${TDT_KEY}`,
+      `&style=default&format=tiles&tk=${TDT_KEY}` +
+      `&_wb=${TDT_TILE_VERSION}`,
     layer,
     style: 'default',
     format: 'tiles',
@@ -390,43 +403,120 @@ function tiandituLayer(layer, path) {
 }
 
 /**
- * 底图降级：天地图不可用时换成本地离线底图
+ * 底图降级与自动恢复
  * ---------------------------------------------------------------------------
- * 天地图的浏览器端 key 是绑域名的。部署到没登记的域名上，瓦片整片返回 403
- * （响应体是 `{"code":301007,"msg":"域名不匹配"}`），而 Cesium 只会静默留白——
- * 打开页面看到一个蓝色地球，分不清是"key 没绑域名"还是"代码写错了"。
+ * 天地图的浏览器端 key 是绑域名的，瓦片取不到时整片返回 403，而 Cesium 只会
+ * 静默留白 —— 打开页面看到一个蓝色地球，分不清是"key 没绑域名"还是"代码写错了"。
+ * 所以失败到一定块数就换成 Cesium 自带的 NaturalEarthII 当底色：不阻断
+ * （行政区划线、易涝点、风险贴图都在上层），也不静默（控制台给一条明确警告）。
  *
- * 所以连着失败 6 块就判定不可用，把最底层换成 Cesium 自带的 NaturalEarthII
- * （随 public/cesium 一起发布，全球 1 级影像，当底色够用）：
- *   - 不阻断：行政区划线、易涝点、风险贴图都在上层，页面照样能读
- *   - 不静默：控制台给一条明确警告，指出该去改 key 的域名白名单
+ * 但只降不升是错的：换过去之后没有任何恢复路径，只要**加载那一刻**网络打个嗝，
+ * 页面就永久停在离线底图上，只有手动刷新才能重来 —— 线上真的撞到过，
+ * 表现是"整片橄榄绿、没有长江、没有任何地名"，看着像底图挂了却查不出原因。
+ * 现在换成离线底图之后每 6 秒探一块真瓦片，探到就自动切回来。
+ *
  * 阈值取 6 而不是 1，是因为网络抖动也会让个别瓦片失败，太低会误切。
+ * （另：相机移动导致的请求取消**不会**走到这里 —— Cesium 的 ImageryLayer
+ *   在 failure 里先判 `request.state === CANCELLED` 就 return，不触发 errorEvent。）
  */
 const BASE_FAIL_THRESHOLD = 6
+const BASE_RETRY_DELAY = 6000     // 降级后每隔多久探一次
+const BASE_RETRY_MAX = 5          // 最多探 5 次（约 30 秒），之后不再打扰网络
+
+/** 武汉上空的一块真实瓦片（z=10 时 114.3°E / 30.6°N 落在 row 420 / col 837）。 */
+function baseTileUrl(probe = 0) {
+  // probe 参数只用于错开缓存：探测每次拼一个不同的值，避免命中上一次失败的结果
+  const tag = probe ? `&_probe=${probe}` : ''
+  return `https://t0.tianditu.gov.cn/img_w/wmts?service=wmts&request=GetTile`
+    + `&version=1.0.0&LAYER=img&tileMatrixSet=w`
+    + `&TileMatrix=10&TileRow=420&TileCol=837`
+    + `&style=default&format=tiles&tk=${TDT_KEY}&_wb=${TDT_TILE_VERSION}${tag}`
+}
+
+/**
+ * 探一块真瓦片：能解码才算天地图可用。
+ *
+ * 为什么用 Image() 而不是 fetch：天地图不回 CORS 头，fetch 连成功的瓦片都会抛，
+ * 判不出真假；Image() 只看"能不能解码"，和 Cesium 取瓦片是同一个判据。
+ */
+function probeBaseTile() {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const finish = (ok) => {
+      img.onload = null
+      img.onerror = null
+      resolve(ok)
+    }
+    img.onload = () => finish(true)
+    img.onerror = () => finish(false)
+    img.src = baseTileUrl(Date.now())
+    setTimeout(() => finish(false), 8000)   // 请求挂死时兜底，别让重试链断在这
+  })
+}
 
 function watchBaseMap(viewer, provider) {
   let fails = 0
-  let switched = false
-  provider.errorEvent.addEventListener(async () => {
-    if (switched) return
-    fails += 1
-    if (fails < BASE_FAIL_THRESHOLD) return
-    switched = true
-    console.warn(
-      '[底图] 天地图瓦片连续加载失败，已切换为本地离线底图。'
-      + '如果这是线上环境，多半是 key 的域名白名单里没有当前域名（接口返回 301007）。',
+  let offline = false
+  let retries = 0
+
+  const toOffline = async () => {
+    const tms = await Cesium.TileMapServiceImageryProvider.fromUrl(
+      Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
     )
-    try {
-      const tms = await Cesium.TileMapServiceImageryProvider.fromUrl(
-        Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
+    // 只换最底下那一层：注记层、风险贴图、时间轴帧都在它上面，不受影响。
+    // remove 默认 destroy = true，天地图那层的 provider 会一起销毁，
+    // 所以下面切回来时必须重新 tiandituLayer()，不能把旧对象再塞回去。
+    viewer.imageryLayers.remove(viewer.imageryLayers.get(0))
+    viewer.imageryLayers.addImageryProvider(tms, 0)
+  }
+
+  const toOnline = () => {
+    viewer.imageryLayers.remove(viewer.imageryLayers.get(0))
+    const fresh = tiandituLayer('img', 'img_w')
+    watch(fresh)                               // 换回来的新层也要能再次降级
+    viewer.imageryLayers.addImageryProvider(fresh, 0)
+  }
+
+  /** 降级之后隔一会儿探一次，探到就切回卫星影像 */
+  const retry = () => {
+    if (!offline || retries >= BASE_RETRY_MAX) return
+    retries += 1
+    setTimeout(async () => {
+      if (!offline) return
+      if (await probeBaseTile()) {
+        toOnline()
+        offline = false
+        fails = 0
+        retries = 0
+        console.info('[底图] 天地图已恢复，切回卫星影像')
+        return
+      }
+      retry()
+    }, BASE_RETRY_DELAY)
+  }
+
+  function watch(target) {
+    target.errorEvent.addEventListener(async (err) => {
+      if (offline) return
+      fails += 1
+      if (fails < BASE_FAIL_THRESHOLD) return
+      console.warn(
+        '[底图] 天地图瓦片连续加载失败，先切成离线底图，之后每 6 秒自动重试。'
+        + `原因多半是 key 的域名白名单里没有当前域名（返回 301007），`
+        + `或 Referer 没发出去（返回 301012；把 Referrer-Policy 改成 no-referrer 就会这样）。`
+        + `最后一条错误：${err?.error?.message || err?.error || '未知'}`,
       )
-      // 只换最底下那一层：注记层、风险贴图、时间轴帧都在它上面，不受影响
-      viewer.imageryLayers.remove(viewer.imageryLayers.get(0))
-      viewer.imageryLayers.addImageryProvider(tms, 0)
-    } catch (e) {
-      console.error('[底图] 离线底图也没加载起来，页面会只剩一个蓝色球体', e)
-    }
-  })
+      offline = true
+      try {
+        await toOffline()
+        retry()
+      } catch (e) {
+        console.error('[底图] 离线底图也没加载起来，页面会只剩一个蓝色球体', e)
+      }
+    })
+  }
+
+  watch(provider)
 }
 
 onMounted(async () => {
